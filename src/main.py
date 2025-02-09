@@ -1,7 +1,7 @@
 from data_preprocessing import *
 
 def main():
-    df = get_data_from_csv("reviews")
+    df = get_data_from_csv_cleaner("reviews")
     print(df)
     df = get_data_from_csv("sales")
     print(df)

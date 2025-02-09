@@ -3,6 +3,9 @@ import numpy as np
 from os import listdir
 from os.path import isfile, join
 
+utf16_encoded_files = ["reviews", "stats_crashes", "stats_ratings_country", "stats_ratings_overview"]
+utf8_encoded_files = ["sales"]
+
 # Should return a pandas dataframe with the data from the csv files in that dir
 def get_data_from_csv(data_type: str):
     path_to_data = "data/"
@@ -44,6 +47,23 @@ def get_data_from_csv(data_type: str):
             final_df = pd.concat(data_frames, ignore_index=True)
             return final_df 
 
-# Reduces the data to what we need 
-def clean_data(dataframe):
-    pass
+def get_data_from_csv_cleaner(data_type: str):
+    path_to_data = "data/"
+    if data_type in utf16_encoded_files:
+        # Add the specific folder to the path
+        path_to_data += data_type
+        
+        # Grab all files from the specified dir and turn them into pandas DataFrames (there should only be csv files in the directory else this blows up)
+        data_frames = [pd.read_csv(join(path_to_data,file), encoding='utf-16', header=0) for file in listdir(path_to_data) if isfile(join(path_to_data, file))]
+        final_df = pd.concat(data_frames, ignore_index=True)
+        
+        return final_df 
+    elif data_type in utf8_encoded_files:
+        # Add the specific folder to the path
+        path_to_data += data_type
+        
+        # THESE FILES FOR SOME GODFORSAKEN REASON HAVE A DIFFERENT ENCODING
+        data_frames = [pd.read_csv(join(path_to_data,file), encoding='utf-8', header=0) for file in listdir(path_to_data) if isfile(join(path_to_data, file))]
+        final_df = pd.concat(data_frames, ignore_index=True)
+        
+        return final_df 
