@@ -169,3 +169,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# pdf file so I can have the assignment pdf in the folder
+.pdf
