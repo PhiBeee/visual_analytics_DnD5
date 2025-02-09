@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 
 # pdf file so I can have the assignment pdf in the folder
-.pdf
+*.pdf
