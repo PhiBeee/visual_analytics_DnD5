@@ -71,23 +71,40 @@ def get_data_from_csv_cleaner(data_type: str) -> pd.DataFrame:
         return final_df 
     
 def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
-    # Makes merging columns work 
-    # df = df.fillna('')
-    for column in df.columns:
-        if df.dtypes[column] != "object":
-            df[column] = df[column].fillna(0)
-        else:
-            df[column] = df[column].fillna('')
-    
+                
     merge_from = ['Hardware'    , 'Sku Id', 'Description' , 'Order Charged Date', 'Product id', 'Buyer State'   , 'Buyer Country'   , 'Buyer Postal Code'   , 'Financial Status', 'Buyer Currency'  , 'Amount (Buyer Currency)']
     merge_to   = ['Device Model', 'SKU ID', 'Order Number', 'Transaction Date'  , 'Product ID', 'State of Buyer', 'Country of Buyer', 'Postal Code of Buyer', 'Transaction Type', 'Currency of Sale', 'Charged Amount'         ]
     
+    # Deal with columns that need to get merged
     for to_idx, merge_from_col in enumerate(merge_from):
         merge_to_col = merge_to[to_idx]
-        print(f"{merge_from_col}:{merge_to_col}")
+                
+        # Check if both columns are of the same type and turn into float if either of them is float
+        if df[merge_to_col].dtype != df[merge_from_col].dtype:
+            if df[merge_to_col].dtype != "object":
+                # Format Currency Strings
+                df[merge_from_col] = df[merge_from_col].replace('[$€£,]', '', regex=True).astype(float)
+                # Change column type to appropriate type
+                df[merge_from_col] = df[merge_from_col].astype(float)
+            elif df[merge_from_col].dtype != "object":
+                df[merge_to_col] = df[merge_to_col].replace('[$€£,]', '', regex=True).astype(float)
+                df[merge_to_col] = df[merge_to_col].astype(float)
+            else:
+                df[merge_from_col] = df[merge_from_col].astype(object)
+            
+        # Fill in the NaN with the appropriate values depending on dtype
+        if df[merge_to_col].dtype != "object":
+            df[[merge_from_col, merge_to_col]] = df[[merge_from_col, merge_to_col]].fillna(0)
+        else:
+            df[[merge_from_col, merge_to_col]] = df[[merge_from_col, merge_to_col]].fillna('')
+        
+        
+        # Merge columns
         df[merge_to_col] += df[merge_from_col]
         # Get rid of redundant column
         df = df.drop(merge_from_col, axis=1)
+        
+        # Get rid of unnecessary rows early
         match merge_to_col:
             case 'Product ID':
                 # Filter to only the app we want
@@ -95,20 +112,8 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
                 continue
             case 'Transaction Type':
                 # Filter out anything that's not a Charge
-                df = df[df[merge_to_col] == "Charge"]
+                df = df[df[merge_to_col].isin(['Charge', 'Charged'])]
                 continue
-    
-    
-    # Hardware = Device Model
-    # Sku Id = SKU ID
-    # Order Number = Description
-    # Transaction Date = Order Charged Date
-    # Product id = Product ID
+        
     # Product Type (0 = paidapp, 1 = inapp)
-    # State of Buyer = Buyer State
-    # Country of Buyer = Buyer Country
-    # Postal Code of Buyer = Buyer Postal Code
-    # Transaction Type = Financial Status (Charged = Charge)
-    # Currency of Sale = Buyer Currency
-    # Charged Amount = Amount (Buyer Currency)
     return df
