@@ -108,9 +108,31 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
         df[columns[0]] = df[columns[0]].fillna(df[columns[1]])
         # Get rid of duplicate data
         df = df.drop(columns[1], axis=1)
-        
+    
+    # Conversion Rates taken from https://www.exchange-rates.org/exchange-rate-history/[cop, crc, nzd]-eur-2021
+    currency_conversions_2021 = {'NZD': 0.598, 'CRC': 0.001361, 'COP': 0.0002260}   
+    
+    # Fill Conversion Rate column to have a rough Euro value for every sale         
+    for currency in set(df['Currency of Sale']):
+        # Remove entries without a conversion rate
+        df_currency = df[~df['Currency Conversion Rate'].isna()]
+        # Take current currency rows to check if we can sample to a conversion rate
+        df_currency = df_currency[df_currency['Currency of Sale'] == currency]
+        # No conversion rate
+        if df_currency.empty:
+            # Very long looking way of filling in the NaN for the currency rows in the Conversion Rate Column with a value from previously defined list
+            df[df['Currency of Sale'] == currency] = df[df['Currency of Sale'] == currency].fillna(value={'Currency Conversion Rate':currency_conversions_2021[currency]})
+        else:
+            sample_conversion = df_currency['Currency Conversion Rate'].sample(1)
+            #                                                                                                            This part over here gets upset without cast to float and iloc
+            df[df['Currency of Sale'] == currency] = df[df['Currency of Sale'] == currency].fillna(value={'Currency Conversion Rate':float(sample_conversion.iloc[0])})
+    
+    # TODO: Actually Convert everything to EUR 
     return df
 
 def clean_country_ratings(df: pd.DataFrame) -> pd.DataFrame:
+    # This is here really just for being here sake, the data is already filtered
+    # Filter to only the app we want
+    df = df[df['Package Name'] == product_id]
     # We might want to calculate the daily average where we don't have it, this is just a placeholder for now      
     return df 
