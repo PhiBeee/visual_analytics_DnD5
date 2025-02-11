@@ -20,11 +20,9 @@ python main.py
 ### Sales 
 - Date and Time need to be properly pre-processed with 'pd.to_datetime' according to assignment  (Done I think? Transaction Time is object dtype but the formatting is correct)
 ### Crashes
-- Check if columns need merging and handle them like we did for Sales
-- Format Date with 'pd.to_datetime'
-- Filter package name
+- DOES NOT NEED CLEANING
 ### Ratings Country
-- Same steps as Crashes
+- Average daily Rating needs to be calculated for some of the days (Maybe)
 ### Reviews and Ratings Overview
 - Optional so we'll decide if we do these once everything else is working properly
 ## Bokeh (Webbased Dashboard)

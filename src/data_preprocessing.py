@@ -109,5 +109,8 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
         # Get rid of duplicate data
         df = df.drop(columns[1], axis=1)
         
-    
     return df
+
+def clean_country_ratings(df: pd.DataFrame) -> pd.DataFrame:
+    # We might want to calculate the daily average where we don't have it, this is just a placeholder for now      
+    return df 
