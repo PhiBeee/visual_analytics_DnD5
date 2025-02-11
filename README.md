@@ -18,8 +18,7 @@ python main.py
 # To-do's
 ## Data Pre-Processing
 ### Sales 
-- Date and Time need to be properly pre-processed with 'pd.to_datetime' according to assignment  
-- Product Type needs to be normalized (swaps notation midway through check comment in 'data_preprocessing.py') **NOT THE MOST IMPORTANT**
+- Date and Time need to be properly pre-processed with 'pd.to_datetime' according to assignment  (Done I think? Transaction Time is object dtype but the formatting is correct)
 ### Crashes
 - Check if columns need merging and handle them like we did for Sales
 - Format Date with 'pd.to_datetime'

@@ -31,8 +31,8 @@ def get_data_from_csv_cleaner(data_type: str) -> pd.DataFrame:
     
 def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
                 
-    merge_from = ['Hardware'    , 'Sku Id', 'Description' , 'Order Charged Date', 'Product id', 'Buyer State'   , 'Buyer Country'   , 'Buyer Postal Code'   , 'Financial Status', 'Buyer Currency'  , 'Amount (Buyer Currency)']
-    merge_to   = ['Device Model', 'SKU ID', 'Order Number', 'Transaction Date'  , 'Product ID', 'State of Buyer', 'Country of Buyer', 'Postal Code of Buyer', 'Transaction Type', 'Currency of Sale', 'Charged Amount'         ]
+    merge_from = ['Hardware'    , 'Sku Id', 'Description' , 'Product id', 'Buyer State'   , 'Buyer Country'   , 'Buyer Postal Code'   , 'Financial Status', 'Buyer Currency'  , 'Amount (Buyer Currency)']
+    merge_to   = ['Device Model', 'SKU ID', 'Order Number', 'Product ID', 'State of Buyer', 'Country of Buyer', 'Postal Code of Buyer', 'Transaction Type', 'Currency of Sale', 'Charged Amount'         ]
     
     # Deal with columns that need to get merged
     for to_idx, merge_from_col in enumerate(merge_from):
@@ -74,5 +74,40 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
                 df = df[df[merge_to_col].isin(['Charge', 'Charged'])]
                 continue
         
-    # Product Type (0 = paidapp, 1 = inapp)
+    # Product Type (0 = paidapp, 1 = inapp) Data changes midway through the csv's so we normalize
+    df.loc[df['Product Type'] == 0, 'Product Type'] = 'paidapp'
+    df.loc[df['Product Type'] == 1, 'Product Type'] = 'inapp'
+    
+    time_columns = ['Transaction Time', 'Order Charged Timestamp']
+    date_columns = ['Transaction Date', 'Order Charged Date'     ]
+    
+    for date_idx, time_column in enumerate(time_columns):
+        date_column = date_columns[date_idx]
+        # Naive approach 
+        if date_idx == 0:
+            # Fill NaN so I can use replace without it screaming at me (Not needed)
+            # df[[date_column, time_column]] = df[[date_column, time_column]].fillna('')
+            
+            # Change Timezone so it stops screaming at me (I gave up on timezone and I am hoping it doesn't matter)
+            df[time_column] = df[time_column].str.replace(r'PDT', '', regex=True)
+        
+            df[date_column] = pd.to_datetime(df[date_column])
+            # Format this one because there is no point in having the date twice
+            df[time_column] = pd.to_datetime(df[time_column], format='mixed')
+            # Also timezone thing 
+            # df[time_column] = df[time_column].tz_convert(tz='CET')
+            df[time_column] = df[time_column].dt.time
+        else:
+            # Convert to the datetime dtype
+            df[[time_column, date_column]] = df[[time_column, date_column]].astype('datetime64[s]')
+            df[time_column] = df[time_column].dt.time
+    
+    # Merge the Columns that mean the same thing
+    list_of_lists = [time_columns, date_columns]
+    for columns in list_of_lists:
+        df[columns[0]] = df[columns[0]].fillna(df[columns[1]])
+        # Get rid of duplicate data
+        df = df.drop(columns[1], axis=1)
+        
+    
     return df
