@@ -127,7 +127,9 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
             #                                                                                                            This part over here gets upset without cast to float and iloc
             df[df['Currency of Sale'] == currency] = df[df['Currency of Sale'] == currency].fillna(value={'Currency Conversion Rate':float(sample_conversion.iloc[0])})
     
-    # TODO: Actually Convert everything to EUR 
+    # Fills the column of charged amount in Euro, recalculated entries but they're the same value, but more precise
+    df['Amount (Merchant Currency)'] = df['Currency Conversion Rate'] * df['Charged Amount']
+    
     return df
 
 def clean_country_ratings(df: pd.DataFrame) -> pd.DataFrame:

@@ -1,9 +1,10 @@
 from data_preprocessing import *
+from to_html import *
 
 def main():
     df = get_data_from_csv_cleaner("sales")
     df = clean_sales(df)
-    print(df['Currency Conversion Rate'])
+    print(df.dtypes)
     
     
 if __name__ == "__main__":
