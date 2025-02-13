@@ -4,9 +4,8 @@ from to_html import *
 def main():
     df = get_data_from_csv_cleaner("sales")
     df = clean_sales(df)
-    print(df.dtypes)
 
-# THIS IS A TEST
+    sales_volume(df)
     
 if __name__ == "__main__":
     main()
