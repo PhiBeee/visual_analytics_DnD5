@@ -1,10 +1,20 @@
 import pandas as pd
 from bokeh.plotting import figure, show
 from bokeh.io import curdoc
-from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter
+from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, TabPanel, Tabs, Tooltip
+
+FONT = 'DM Sans'
+
+"""
+These need to be added to the final html head to get the right font, otherwise it's boring
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+"""
 
 def sales_volume(df: pd.DataFrame):
-    # TODO: Should create a visual of sales over time in terms of at least two measures
+    # FIRST FIGURE
+
     # Get monthly entries
     df_june      = df[(df['Transaction Date'] >= '2021-06-01') & (df['Transaction Date'] < '2021-07-01')]
     df_july      = df[(df['Transaction Date'] >= '2021-07-01') & (df['Transaction Date'] < '2021-08-01')]
@@ -28,38 +38,96 @@ def sales_volume(df: pd.DataFrame):
     
     months = ['June', 'July', 'August', 'September', 'October', 'November', 'December']
     product_types = ['Premium', 'Unlock Character Manager']
-    colors = ['blue', 'red']
+    colors = ['#0236a5', '#fe0369']
 
     data = {'months' : months,
             'Premium':  monthly_premium,
             'Unlock Character Manager': monthly_character}
+
+    # Change main theme (I don't like burning my eyes)
+    curdoc().theme = 'dark_minimal'
     
-    plot = figure(
+    euro_fig = figure(
         title='Sales over time',
-        width=500,
+        width=750,
         height=500,
         x_axis_label='Month of 2021',
-        # Still have to decide what I want here
         y_axis_label='Revenue in EUR',
         x_range=months,
         tools='hover',
         tooltips='$name @months: @$name'
     )
 
-    plot.vbar_stack(product_types, x='months', width=0.9, color=colors, source=data, legend_label=product_types)
+    euro_fig.vbar_stack(product_types, x='months', width=0.9, color=colors, source=data, legend_label=product_types)
 
-    plot.y_range.start = 0
-    plot.y_range.end = 1500
-    plot.x_range.range_padding = 0.1
-    plot.xgrid.grid_line_color = None
-    plot.axis.minor_tick_line_color = None
-    plot.outline_line_color = None
-    plot.legend.location = "top_left"
-    plot.legend.orientation = "horizontal"
+    euro_fig.y_range.start = 0
+    euro_fig.y_range.end = 1500
+    euro_fig.x_range.range_padding = 0.1
+    euro_fig.xgrid.grid_line_color = None
+    euro_fig.axis.minor_tick_line_color = None
+    euro_fig.outline_line_color = None
+    euro_fig.legend.location = "top_left"
+    euro_fig.legend.orientation = "horizontal"
 
-    curdoc().theme = 'caliber'
+    # Nicer looking font idk how else to set it for everything
+    euro_fig.legend.title_text_font = FONT
+    euro_fig.legend.label_text_font = FONT
+    euro_fig.title.text_font = FONT
+    euro_fig.axis.major_label_text_font = FONT
+    euro_fig.axis.axis_label_text_font = FONT
 
-    show(plot)
+    # SECOND FIGURE 
+
+    # Get individual currencies
+    currencies = [str(currency) for currency in set(df['Currency of Sale'])]
+    # Get amount of sales for main currencies >= 10 sales
+    main_currencies = [currency for currency in currencies if len(df[df['Currency of Sale'] == currency]) >= 10]
+    sales_per_main_currency = [len(df[df['Currency of Sale'] == currency]) for currency in main_currencies]
+    # Get amount of sales for less popular currencies < 10 sales
+    small_currencies = [currency for currency in currencies if len(df[df['Currency of Sale'] == currency]) < 10]
+    sales_for_small_currencies = sum([len(df[df['Currency of Sale'] == currency]) for currency in small_currencies])
+
+    sales_per_currency = sales_per_main_currency + [sales_for_small_currencies]
+    used_currencies = main_currencies + ['Others']
+
+    currency_data = {
+        'Currency': used_currencies,
+        'Sales'   : sales_per_currency,
+    }
+
+    currency_fig = figure(
+        title='Sales per currency',
+        width=750,
+        height=500,
+        x_axis_label='Currency of Sale',
+        y_axis_label='Sales',
+        x_range=used_currencies,
+        tools='hover',
+        tooltips='Amount of Sales in @Currency: @Sales',
+    )
+    
+    currency_fig.vbar(top='Sales', x='Currency', width=0.9, source=currency_data)
+
+    # Stylizing the vbar
+    currency_fig.y_range.start = 0
+    currency_fig.y_range.end = 1500
+    currency_fig.x_range.range_padding = 0.1
+    currency_fig.xgrid.grid_line_color = None
+    currency_fig.axis.minor_tick_line_color = None
+    currency_fig.outline_line_color = None
+
+    # Nicer looking font idk how else to set it for everything
+    currency_fig.title.text_font = FONT
+    currency_fig.axis.major_label_text_font = FONT
+    currency_fig.axis.axis_label_text_font = FONT
+
+    tabs = Tabs(tabs=[
+        TabPanel(child=euro_fig, title='EUR', tooltip=Tooltip(content='Sales in Euro', position='bottom_center')),
+        # Add second fig
+        TabPanel(child=currency_fig, title='Currencies', tooltip=Tooltip(content='Amount of Sales per Currency', position='bottom_center'))
+    ])
+
+    show(tabs)
     
     
 
@@ -77,4 +145,8 @@ def ratings_and_stability(df: pd.DataFrame):
 
 def geographical_view(df: pd.DataFrame):
     # TODO: Map of Sales volume and rating per coutnry (might want to separate both)
-    pass
+    # This stuff is just me playing around because the sales_volume has grown quite large
+    plot = figure(width=300, height=300)
+    plot.vbar(x=[1, 2, 3], width=0.5, bottom=0, top=[1,2,3], color="#CAB2D6")
+
+    show(plot)

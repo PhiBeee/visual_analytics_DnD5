@@ -6,6 +6,7 @@ def main():
     df = clean_sales(df)
 
     sales_volume(df)
+    # geographical_view(df)
     
 if __name__ == "__main__":
     main()
