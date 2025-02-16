@@ -1,16 +1,66 @@
+from math import pi
 import pandas as pd
-from bokeh.plotting import figure, show
+from bokeh.plotting import figure, show, save
 from bokeh.io import curdoc
-from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, TabPanel, Tabs, Tooltip
+from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, TabPanel, Tabs, Tooltip, Div
+from bokeh.palettes import Bokeh8
+from bokeh.transform import cumsum
+from bokeh.layouts import column
 
 FONT = 'DM Sans'
 
 """
-These need to be added to the final html head to get the right font, otherwise it's boring
+These need to be added to the final html head to get the right font and look, otherwise it's boring
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <style>
+      html, body {
+        box-sizing: border-box;
+        padding: 0;
+        background-color: #15191c;
+        color: white;
+        align-items: center;
+      }
+
+      html{
+        display: table;
+        margin: auto;
+      }
+
+      body{
+        display: table-cell;
+        vertical-align: middle;
+      }
+      
+    </style>
 """
+
+# This function will bring together every other function to rener the final html (well as much as we can with bokeh I'd rather just be writing proper html atp)
+def final_html(df: pd.DataFrame):
+    top_div = Div(
+        text='''Data Visualisation''',
+        styles={'font-family': 'DM Sans', 'font-size': '5rem'},
+        height=100,
+        width=500,
+        width_policy='fit',
+        align='center'
+    )
+
+    # Get the Sales Volume plots
+    sales_tabs = sales_volume(df)
+
+    final_layout = column(
+        children=[top_div, sales_tabs],
+        align='center'
+    )
+
+    save(
+        obj=final_layout,
+        filename='main.html',
+        title='DnD5 Data Visualisation'
+    )
+
 
 def sales_volume(df: pd.DataFrame):
     # FIRST FIGURE
@@ -54,11 +104,21 @@ def sales_volume(df: pd.DataFrame):
         x_axis_label='Month of 2021',
         y_axis_label='Revenue in EUR',
         x_range=months,
+        toolbar_location=None,
         tools='hover',
         tooltips='$name @months: @$name'
     )
 
-    euro_fig.vbar_stack(product_types, x='months', width=0.9, color=colors, source=data, legend_label=product_types)
+    euro_fig.vbar_stack(
+        product_types,
+        x='months',
+        width=0.9,
+        color=colors,
+        source=data,
+        muted_color=colors,
+        muted_alpha=.2,
+        legend_label=product_types
+    )
 
     euro_fig.y_range.start = 0
     euro_fig.y_range.end = 1500
@@ -68,6 +128,10 @@ def sales_volume(df: pd.DataFrame):
     euro_fig.outline_line_color = None
     euro_fig.legend.location = "top_left"
     euro_fig.legend.orientation = "horizontal"
+    euro_fig.legend.click_policy = 'mute'
+
+    euro_fig.min_border_bottom=0
+    euro_fig.min_border_left=0
 
     # Nicer looking font idk how else to set it for everything
     euro_fig.legend.title_text_font = FONT
@@ -90,44 +154,55 @@ def sales_volume(df: pd.DataFrame):
     sales_per_currency = sales_per_main_currency + [sales_for_small_currencies]
     used_currencies = main_currencies + ['Others']
 
+    # dict to make it easier to turn into a df
     currency_data = {
         'Currency': used_currencies,
         'Sales'   : sales_per_currency,
     }
+    
+    # Turn our data back into a df to then calculate angles for our pie
+    data = pd.DataFrame(currency_data)
+    data['angle'] = data['Sales']/data['Sales'].sum() * 2*pi
+    data['color'] = Bokeh8
 
-    currency_fig = figure(
+    pie_fig = figure(
         title='Sales per currency',
-        width=750,
         height=500,
-        x_axis_label='Currency of Sale',
-        y_axis_label='Sales',
-        x_range=used_currencies,
+        width=750,
+        toolbar_location=None,
         tools='hover',
-        tooltips='Amount of Sales in @Currency: @Sales',
+        tooltips='@Currency: @Sales',
+        x_range=(-.5, 1.0)
+    )
+
+    pie_fig.wedge(
+        x=.25,
+        y=1,
+        radius=.4,
+        start_angle=cumsum('angle', include_zero=True),
+        end_angle=cumsum('angle'),
+        line_color='black',
+        fill_color='color',
+        legend_field='Currency',
+        source=data
     )
     
-    currency_fig.vbar(top='Sales', x='Currency', width=0.9, source=currency_data)
+    # Stylizing the pie
+    pie_fig.axis.axis_label = None
+    pie_fig.axis.visible = False
+    pie_fig.grid.grid_line_color = None
 
-    # Stylizing the vbar
-    currency_fig.y_range.start = 0
-    currency_fig.y_range.end = 1500
-    currency_fig.x_range.range_padding = 0.1
-    currency_fig.xgrid.grid_line_color = None
-    currency_fig.axis.minor_tick_line_color = None
-    currency_fig.outline_line_color = None
-
-    # Nicer looking font idk how else to set it for everything
-    currency_fig.title.text_font = FONT
-    currency_fig.axis.major_label_text_font = FONT
-    currency_fig.axis.axis_label_text_font = FONT
+    pie_fig.legend.label_text_font = FONT
+    pie_fig.title.text_font= FONT
 
     tabs = Tabs(tabs=[
         TabPanel(child=euro_fig, title='EUR', tooltip=Tooltip(content='Sales in Euro', position='bottom_center')),
-        # Add second fig
-        TabPanel(child=currency_fig, title='Currencies', tooltip=Tooltip(content='Amount of Sales per Currency', position='bottom_center'))
-    ])
+        TabPanel(child=pie_fig, title='Currencies Pie', tooltip=Tooltip(content='Amount of Sales per Currency but in a pie chart', position='bottom_center')),
+        ],
+        styles={'font-family': 'DM Sans', 'font-size': '1rem'}
+    )
 
-    show(tabs)
+    return tabs
     
     
 
