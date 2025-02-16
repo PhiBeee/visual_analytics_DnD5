@@ -249,6 +249,7 @@ def geographical_view(df: pd.DataFrame):
 
     choropleth = figure(
         title='Choropleth of Countries',
+        toolbar_location=None,
         tools='hover',
         x_axis_location=None,
         y_axis_location=None,
