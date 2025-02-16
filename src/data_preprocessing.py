@@ -1,8 +1,11 @@
+# Data handling modules
 import pandas as pd
 import geopandas as gpd
-import numpy as np
+
 # Used for country code conversion
 import country_converter as cc
+
+# Used for getting the files with our data
 from os import listdir
 from os.path import isfile, join
 
@@ -12,6 +15,7 @@ utf8_encoded_files = ["sales"]
 product_id = "com.vansteinengroentjes.apps.ddfive"
 shapefile = 'GeoBoundaries/geoBoundariesCGAZ_ADM0.shp'
 puerto_rico_shapefile = 'GeoBoundaries/PRI_adm0.shp'
+better_shapefile = 'betterGeoBoundaries/ne_110m_admin_0_countries.shp'
 
 def get_data_from_csv_cleaner(data_type: str) -> pd.DataFrame:
     path_to_data = "data/"
@@ -145,6 +149,39 @@ def clean_country_ratings(df: pd.DataFrame) -> pd.DataFrame:
     return df 
 
 # This function adds geometry data to our df to make a choropleth
+def better_geographical_data(df: pd.DataFrame) -> pd.DataFrame:
+    iso3_cc = cc.convert(
+        names=df['Country of Buyer'],
+        to='ISO3'
+    )
+
+    # Replace old data
+    df['Country of Buyer'] = iso3_cc
+    # Convenience rename to be clearer
+    df = df.rename(
+        columns={
+            'Country of Buyer': 'Country Code of Buyer'
+        }
+    )
+
+    geometry = gpd.read_file(better_shapefile)[['ADMIN', 'ADM0_A3', 'geometry']]
+    geometry = geometry.rename(
+        columns={
+            'ADMIN': 'Country of Buyer',
+            'ADM0_A3': 'Country Code of Buyer'
+        }
+    )
+
+    # Merge the two add geometry data to original db
+    merged_df = df.merge(
+        right=geometry,
+        left_on='Country Code of Buyer',
+        right_on='Country Code of Buyer',
+    )
+
+    return merged_df
+
+# This is here for legacy purposes, because I spent a good amount of hours on this before realizing it could've been easier (DONT USE!!!!!!)
 def add_geographic_data(df: pd.DataFrame) -> pd.DataFrame:
     # Convert our ISO2 country codes to ISO3 to match the shapefile data
     iso3_cc = cc.convert(
@@ -181,6 +218,10 @@ def add_geographic_data(df: pd.DataFrame) -> pd.DataFrame:
     
     # Add Puerto Rico to our original geometry data
     geometry = pd.concat([geometry, puerto_rico_shape], ignore_index=True)
+
+    # Uncomment this to remake the geojson file (THIS WILL TAKE A LONG TIME THERE IS A LOT OF DATA)
+    # Please don't do this
+    # geometry.to_file('geometry.geojson', driver='GeoJSON')
 
     # Merge the two add geometry data to original db
     merged_df = df.merge(

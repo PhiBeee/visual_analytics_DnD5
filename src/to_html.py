@@ -1,11 +1,23 @@
+# For the pie chart
 from math import pi
+
+# Filtering operations on our dataframes
 import pandas as pd
-from bokeh.plotting import figure, show, save
-from bokeh.io import curdoc
-from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, TabPanel, Tabs, Tooltip, Div
-from bokeh.palettes import Bokeh8
+import geopandas as gpd
+
+# For the Choropleth
+import json
+
+# Bokeh shenanigans (try avoiding show if possible to test things, just use save with test.html)
+from bokeh.plotting import figure, save
+from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, GeoJSONDataSource
 from bokeh.transform import cumsum
+
+# HTML manipulation and visuals
+from bokeh.io import curdoc
 from bokeh.layouts import column
+from bokeh.models import TabPanel, Tabs, Tooltip, Div
+from bokeh.palettes import Bokeh8
 
 FONT = 'DM Sans'
 
@@ -36,7 +48,7 @@ These need to be added to the final html head to get the right font and look, ot
     </style>
 """
 
-# This function will bring together every other function to rener the final html (well as much as we can with bokeh I'd rather just be writing proper html atp)
+# This function will bring together every other function to render the final html (well as much as we can with bokeh I'd rather just be writing proper html atp)
 def final_html(df: pd.DataFrame):
     top_div = Div(
         text='''Data Visualisation''',
@@ -50,8 +62,11 @@ def final_html(df: pd.DataFrame):
     # Get the Sales Volume plots
     sales_tabs = sales_volume(df)
 
+    # Get our awesome choropleth
+    choropleth = geographical_view(df)
+
     final_layout = column(
-        children=[top_div, sales_tabs],
+        children=[top_div, sales_tabs, choropleth],
         align='center'
     )
 
@@ -199,7 +214,8 @@ def sales_volume(df: pd.DataFrame):
         TabPanel(child=euro_fig, title='EUR', tooltip=Tooltip(content='Sales in Euro', position='bottom_center')),
         TabPanel(child=pie_fig, title='Currencies Pie', tooltip=Tooltip(content='Amount of Sales per Currency but in a pie chart', position='bottom_center')),
         ],
-        styles={'font-family': 'DM Sans', 'font-size': '1rem'}
+        styles={'font-family': 'DM Sans', 'font-size': '1rem'},
+        align='center'
     )
 
     return tabs
@@ -218,10 +234,37 @@ def ratings_and_stability(df: pd.DataFrame):
     )
     pass
 
-def geographical_view(df: pd.DataFrame):
-    # TODO: Map of Sales volume and rating per coutnry (might want to separate both)
-    # This stuff is just me playing around because the sales_volume has grown quite large
-    plot = figure(width=300, height=300)
-    plot.vbar(x=[1, 2, 3], width=0.5, bottom=0, top=[1,2,3], color="#CAB2D6")
+# This is the function from https://dmnfarrell.github.io/bioinformatics/bokeh-maps
+def get_geodatasource(gdf: gpd.GeoDataFrame):
+    """Get getjsondatasource from geopandas object"""
+    json_data = json.dumps(json.loads(gdf.to_json()))
+    return GeoJSONDataSource(geojson = json_data)
 
-    show(plot)
+# Needs some visual and interactive improvements but I'll do that later
+def geographical_view(df: pd.DataFrame):
+    curdoc().theme = 'dark_minimal'
+
+    country_data = gpd.GeoDataFrame(df[['Country of Buyer', 'Country Code of Buyer', 'geometry']])
+    geosurce = get_geodatasource(country_data)
+
+    choropleth = figure(
+        title='Choropleth of Countries',
+        tools='hover',
+        x_axis_location=None,
+        y_axis_location=None,
+        width=1600,
+        height=900
+    )
+
+    choropleth.grid.grid_line_color = None
+
+    choropleth.patches(
+        xs='xs',
+        ys='ys',
+        source=geosurce,
+        fill_alpha=.7,
+        line_width=.5,
+        line_color='black'
+    )
+
+    return choropleth
