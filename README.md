@@ -33,7 +33,7 @@ Assignment requirements are:
 - ✔️ Sales Volume: sales over time (in terms of at least two measures)
 - ✔️ Attribute Segmentation and Filtering: Present Sales volume segmented per attribute (at least SKU ID)
 - ❌ Ratings vs Stability: Come up with key performance indicators to help understand app stability vs user satisfaction
-- ❌ Geographical Development: Map of Sales Volume and rating per country
+- ✔️ (Kinda) Geographical Development: Map of Sales Volume and rating per country
 - ❓ Make it look nice (Started, hard to tell without a final product)
 ## Written Document
 TBD
