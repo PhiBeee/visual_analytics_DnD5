@@ -172,3 +172,5 @@ cython_debug/
 
 # pdf file so I can have the assignment pdf in the folder
 *.pdf
+src/GeoBoundaries/geoBoundariesCGAZ_ADM0.shp
+src/GeoBoundaries/PRI_adm0.shp
