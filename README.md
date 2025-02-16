@@ -15,6 +15,9 @@ If running from terminal make sure to be in `src` folder
 ```
 python main.py
 ```
+# Credits 
+Geographic shapefile by [geoBoundaries](https://www.geoboundaries.org/)  
+Puerto Rico shapefile by [Stanford University](https://purl.stanford.edu/wm713fm9130) made by Hijmans, Robert J.
 # To-do's
 ## Data Pre-Processing
 Data pre-processing is mostly done, further pre-processing will be added depending on if we need it for the dashboard or not.

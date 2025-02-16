@@ -1,5 +1,8 @@
 import pandas as pd
+import geopandas as gpd
 import numpy as np
+# Used for country code conversion
+import country_converter as cc
 from os import listdir
 from os.path import isfile, join
 
@@ -7,6 +10,8 @@ utf16_encoded_files = ["reviews", "stats_crashes", "stats_ratings_country", "sta
 utf8_encoded_files = ["sales"]
 
 product_id = "com.vansteinengroentjes.apps.ddfive"
+shapefile = 'GeoBoundaries/geoBoundariesCGAZ_ADM0.shp'
+puerto_rico_shapefile = 'GeoBoundaries/PRI_adm0.shp'
 
 def get_data_from_csv_cleaner(data_type: str) -> pd.DataFrame:
     path_to_data = "data/"
@@ -138,3 +143,50 @@ def clean_country_ratings(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df['Package Name'] == product_id]
     # We might want to calculate the daily average where we don't have it, this is just a placeholder for now      
     return df 
+
+# This function adds geometry data to our df to make a choropleth
+def add_geographic_data(df: pd.DataFrame) -> pd.DataFrame:
+    # Convert our ISO2 country codes to ISO3 to match the shapefile data
+    iso3_cc = cc.convert(
+        names=df['Country of Buyer'],
+        to='ISO3'
+    )
+
+    # Replace old data
+    df['Country of Buyer'] = iso3_cc
+    # Convenience rename to be clearer
+    df = df.rename(
+        columns={
+            'Country of Buyer': 'Country Code of Buyer'
+        }
+    )
+
+    # To be of note: used shapefile lacks puerto rico making us lose two rows (which is bad)
+    geometry = gpd.read_file(shapefile)[['shapeName', 'shapeGroup', 'geometry']]
+    geometry = geometry.rename(
+        columns={
+            'shapeName': 'Country of Buyer',
+            'shapeGroup': 'Country Code of Buyer'
+        }
+    )
+
+    # So here is the puerto rico stuff
+    puerto_rico_shape = gpd.read_file(puerto_rico_shapefile)[['ISO', 'NAME_ENGLI', 'geometry']]
+    puerto_rico_shape = puerto_rico_shape.rename(
+        columns={
+            'ISO': 'Country Code of Buyer',
+            'NAME_ENGLI': 'Country of Buyer'
+        }
+    )
+    
+    # Add Puerto Rico to our original geometry data
+    geometry = pd.concat([geometry, puerto_rico_shape], ignore_index=True)
+
+    # Merge the two add geometry data to original db
+    merged_df = df.merge(
+        right=geometry,
+        left_on='Country Code of Buyer',
+        right_on='Country Code of Buyer',
+    )
+
+    return merged_df
