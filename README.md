@@ -17,18 +17,20 @@ python main.py
 ```
 # To-do's
 ## Data Pre-Processing
-### Sales 
-- Date and Time need to be properly pre-processed with 'pd.to_datetime' according to assignment  (Done I think? Transaction Time is object dtype but the formatting is correct)
-### Crashes
-- DOES NOT NEED CLEANING
-### Ratings Country
-- Average daily Rating needs to be calculated for some of the days (Maybe)
-### Reviews and Ratings Overview
-- Optional so we'll decide if we do these once everything else is working properly
+Data pre-processing is mostly done, further pre-processing will be added depending on if we need it for the dashboard or not.
 ## Bokeh (Webbased Dashboard)
-Nothing has been done on this end since it relies on the Data Pre-processing, but the mentioned requirements are:
-- At least 4 widgets visualizing data in a different way each
-- Sales Volume: sales over time (in terms of at least two measures)
-- Attribute Segmentation and Filtering: Present Sales volume segmented per attribute (at least SKU ID)
-- Ratings vs Stability: Come up with key performance indicators to help understand app stability vs user satisfaction
-- Geographical Development: Map of Sales Volume and rating per country
+### What we have at the moment
+- Slightly nice looking base
+- Two charts for Sales Volume:
+    - Sales Amount per currency
+    - Sales per month per purchase type (SKU ID)
+
+Assignment requirements are:
+- ❌ At least 4 widgets visualizing data in a different way each
+- ✔️ Sales Volume: sales over time (in terms of at least two measures)
+- ✔️ Attribute Segmentation and Filtering: Present Sales volume segmented per attribute (at least SKU ID)
+- ❌ Ratings vs Stability: Come up with key performance indicators to help understand app stability vs user satisfaction
+- ❌ Geographical Development: Map of Sales Volume and rating per country
+- ❓ Make it look nice (Started, hard to tell without a final product)
+## Written Document
+TBD
