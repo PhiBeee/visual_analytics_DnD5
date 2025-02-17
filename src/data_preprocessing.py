@@ -138,10 +138,17 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
     
     # Fills the column of charged amount in Euro, recalculated entries but they're the same value, but more precise
     df['Amount (Merchant Currency)'] = df['Currency Conversion Rate'] * df['Charged Amount']
+
+    # Convenience rename to be clearer
+    df = df.rename(
+        columns={
+            'Country of Buyer': 'Country Code of Buyer'
+        }
+    )
     
     return df
 
-def clean_country_ratings(df: pd.DataFrame) -> pd.DataFrame:
+def clean_country_ratings(df: pd.DataFrame):
     # This is here really just for being here sake, the data is already filtered
     # Filter to only the app we want
     df = df[df['Package Name'] == product_id]
@@ -151,18 +158,12 @@ def clean_country_ratings(df: pd.DataFrame) -> pd.DataFrame:
 # This function adds geometry data to our df to make a choropleth
 def better_geographical_data(df: pd.DataFrame) -> pd.DataFrame:
     iso3_cc = cc.convert(
-        names=df['Country of Buyer'],
+        names=df['Country Code of Buyer'],
         to='ISO3'
     )
 
     # Replace old data
-    df['Country of Buyer'] = iso3_cc
-    # Convenience rename to be clearer
-    df = df.rename(
-        columns={
-            'Country of Buyer': 'Country Code of Buyer'
-        }
-    )
+    df['Country Code of Buyer'] = iso3_cc
 
     geometry = gpd.read_file(better_shapefile)[['ADMIN', 'ADM0_A3', 'geometry']]
     geometry = geometry.rename(
@@ -175,59 +176,10 @@ def better_geographical_data(df: pd.DataFrame) -> pd.DataFrame:
     # Merge the two add geometry data to original db
     merged_df = df.merge(
         right=geometry,
+        how='outer',
         left_on='Country Code of Buyer',
         right_on='Country Code of Buyer',
+        indicator=True
     )
 
-    return merged_df
-
-# This is here for legacy purposes, because I spent a good amount of hours on this before realizing it could've been easier (DONT USE!!!!!!)
-def add_geographic_data(df: pd.DataFrame) -> pd.DataFrame:
-    # Convert our ISO2 country codes to ISO3 to match the shapefile data
-    iso3_cc = cc.convert(
-        names=df['Country of Buyer'],
-        to='ISO3'
-    )
-
-    # Replace old data
-    df['Country of Buyer'] = iso3_cc
-    # Convenience rename to be clearer
-    df = df.rename(
-        columns={
-            'Country of Buyer': 'Country Code of Buyer'
-        }
-    )
-
-    # To be of note: used shapefile lacks puerto rico making us lose two rows (which is bad)
-    geometry = gpd.read_file(shapefile)[['shapeName', 'shapeGroup', 'geometry']]
-    geometry = geometry.rename(
-        columns={
-            'shapeName': 'Country of Buyer',
-            'shapeGroup': 'Country Code of Buyer'
-        }
-    )
-
-    # So here is the puerto rico stuff
-    puerto_rico_shape = gpd.read_file(puerto_rico_shapefile)[['ISO', 'NAME_ENGLI', 'geometry']]
-    puerto_rico_shape = puerto_rico_shape.rename(
-        columns={
-            'ISO': 'Country Code of Buyer',
-            'NAME_ENGLI': 'Country of Buyer'
-        }
-    )
-    
-    # Add Puerto Rico to our original geometry data
-    geometry = pd.concat([geometry, puerto_rico_shape], ignore_index=True)
-
-    # Uncomment this to remake the geojson file (THIS WILL TAKE A LONG TIME THERE IS A LOT OF DATA)
-    # Please don't do this
-    # geometry.to_file('geometry.geojson', driver='GeoJSON')
-
-    # Merge the two add geometry data to original db
-    merged_df = df.merge(
-        right=geometry,
-        left_on='Country Code of Buyer',
-        right_on='Country Code of Buyer',
-    )
-
-    return merged_df
+    return merged_df, geometry

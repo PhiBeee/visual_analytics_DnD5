@@ -7,14 +7,14 @@ def main():
     df = get_data_from_csv_cleaner("sales")
 
     print('Cleaning sales data')
-    df = clean_sales(df)
+    df_no_geographical = clean_sales(df)
 
     print('Getting geographical data')
-    final_df = better_geographical_data(df)
+    final_df, geodf = better_geographical_data(df_no_geographical)
 
     # Visualizing data
     print('Making the html file')
-    final_html(final_df)
+    final_html(final_df, geodf)
     
 if __name__ == "__main__":
     main()

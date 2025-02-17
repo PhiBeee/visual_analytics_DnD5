@@ -16,8 +16,9 @@ from bokeh.transform import cumsum
 # HTML manipulation and visuals
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import TabPanel, Tabs, Tooltip, Div
-from bokeh.palettes import Bokeh8
+from bokeh.models import TabPanel, Tabs, Tooltip, Div, ColorBar, LinearColorMapper
+from bokeh.palettes import Bokeh8, OrRd9, Viridis256, BuPu9, Oranges9
+from bokeh.transform import linear_cmap
 
 FONT = 'DM Sans'
 
@@ -49,7 +50,7 @@ These need to be added to the final html head to get the right font and look, ot
 """
 
 # This function will bring together every other function to render the final html (well as much as we can with bokeh I'd rather just be writing proper html atp)
-def final_html(df: pd.DataFrame):
+def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame):
     top_div = Div(
         text='''Data Visualisation''',
         styles={'font-family': 'DM Sans', 'font-size': '5rem'},
@@ -63,7 +64,7 @@ def final_html(df: pd.DataFrame):
     sales_tabs = sales_volume(df)
 
     # Get our awesome choropleth
-    choropleth = geographical_view(df)
+    choropleth = geographical_view(df, geodf)
 
     final_layout = column(
         children=[top_div, sales_tabs, choropleth],
@@ -241,16 +242,63 @@ def get_geodatasource(gdf: gpd.GeoDataFrame):
     return GeoJSONDataSource(geojson = json_data)
 
 # Needs some visual and interactive improvements but I'll do that later
-def geographical_view(df: pd.DataFrame):
+def geographical_view(df: pd.DataFrame, gdf: gpd.GeoDataFrame):
     curdoc().theme = 'dark_minimal'
+    # Fun fact: Puerto Rico and Argentina use USD, which is why the choropleth has less sales in the USA than the pie in USD
+    
+    # Filter out the countries we initially had data for
+    currencies_with_sales = df[df['_merge'] == 'both']
+    currencies_with_sales = set(currencies_with_sales['Country Code of Buyer'])
 
-    country_data = gpd.GeoDataFrame(df[['Country of Buyer', 'Country Code of Buyer', 'geometry']])
-    geosurce = get_geodatasource(country_data)
+    # Get and array of tuples (Country Code, Sales)
+    sales_per_currency = [(country_code, len(df[df['Country Code of Buyer'] == country_code])) for country_code in set(df['Country Code of Buyer'])]
+    sales_per_currency = pd.DataFrame(sales_per_currency, columns=['Country Code of Buyer','Sales'])
+    
+    # Adjust for the fact that the countries with no sales now have a row because of our outer merge
+    meow = sales_per_currency[~sales_per_currency['Country Code of Buyer'].isin(currencies_with_sales)]
+    # It suddenly started not liking this but is behaving properly so whatever
+    meow['Sales'] = meow['Sales']-1
+    sales_per_currency[~sales_per_currency['Country Code of Buyer'].isin(currencies_with_sales)] = meow
+
+    print(sales_per_currency)
+    # 38 countries with sales
+    gdf = gdf.merge(
+        right=sales_per_currency,
+        left_on='Country Code of Buyer',
+        right_on='Country Code of Buyer',
+    )
+
+    # Separating for better colouring
+    gdf_no_sales = gdf[gdf['Sales']==0]
+    gdf_sales = gdf[gdf['Sales']!=0]
+
+    geosource_sales = get_geodatasource(gdf_sales)
+    geosource_no_sales = get_geodatasource(gdf_no_sales)
+
+    # Visualizing part
+    palette = Oranges9[:-2]
+    palette = palette[::-1]
+
+    cmap = LinearColorMapper(
+        palette=palette,
+        low=1,
+        high=115,
+    )
+
+    cbar = ColorBar(
+        color_mapper=cmap,
+        label_standoff=9,
+        width=500,
+        height=20,
+        location=(550,0),
+        orientation='horizontal'
+    )
 
     choropleth = figure(
-        title='Choropleth of Countries',
+        title='Sales per country',
         toolbar_location=None,
         tools='hover',
+        tooltips='@{Country of Buyer}: @Sales',
         x_axis_location=None,
         y_axis_location=None,
         width=1600,
@@ -262,10 +310,31 @@ def geographical_view(df: pd.DataFrame):
     choropleth.patches(
         xs='xs',
         ys='ys',
-        source=geosurce,
+        source=geosource_sales,
         fill_alpha=.7,
         line_width=.5,
-        line_color='black'
+        line_color='black',
+        fill_color={
+            'field': 'Sales',
+            'transform': cmap,
+        }
     )
+
+    choropleth.add_layout(
+        cbar,
+        'below'
+    )
+
+    choropleth.patches(
+        xs='xs',
+        ys='ys',
+        source=geosource_no_sales,
+        fill_alpha=.7,
+        line_width=.5,
+        line_color='black',
+        fill_color=Oranges9[-1]
+    )
+
+    choropleth.title.text_font = FONT
 
     return choropleth
