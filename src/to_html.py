@@ -12,10 +12,11 @@ import json
 from bokeh.plotting import figure, save
 from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, GeoJSONDataSource
 from bokeh.transform import cumsum
+from bokeh.resources import Resources
 
 # HTML manipulation and visuals
 from bokeh.io import curdoc
-from bokeh.layouts import column
+from bokeh.layouts import column, row
 from bokeh.models import TabPanel, Tabs, Tooltip, Div, ColorBar, LinearColorMapper
 from bokeh.palettes import Bokeh8, OrRd9, Viridis256, BuPu9, Oranges9
 from bokeh.transform import linear_cmap
@@ -51,17 +52,35 @@ These need to be added to the final html head to get the right font and look, ot
 
 # This function will bring together every other function to render the final html (well as much as we can with bokeh I'd rather just be writing proper html atp)
 def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame):
-    top_div = Div(
-        text='''Data Visualisation''',
-        styles={'font-family': 'DM Sans', 'font-size': '5rem'},
+    resources =  Resources(
+        mode='cdn',
+    )
+
+    title_div = Div(
+        text='''Dashboard for ''',
+        styles={'font-family': 'DM Sans', 'font-size': '5rem', 'text-align':'center'},
         height=100,
         width=500,
         width_policy='fit',
         align='center'
     )
 
+    img_div = Div(
+        text='<img src="https://complete-reference.com/img/logo2.png">',
+        styles={'font-family': 'DM Sans', 'max-width':'50%', 'max-height':'50%', 'height': 'auto'},
+        height=100,
+        width=100,
+        width_policy='fit',
+        align='center'
+    )
+
+    top_div = row(
+        children=[title_div, img_div],
+        align='center'
+    )
+
     # Get the Sales Volume plots
-    sales_tabs = sales_volume(df)
+    sales_tabs, monthly_dfs = sales_volume(df)
 
     # Get our awesome choropleth
     choropleth = geographical_view(df, geodf)
@@ -74,7 +93,8 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame):
     save(
         obj=final_layout,
         filename='main.html',
-        title='DnD5 Data Visualisation'
+        title='DnD5 Data Visualisation',
+        resources=resources
     )
 
 
@@ -219,7 +239,7 @@ def sales_volume(df: pd.DataFrame):
         align='center'
     )
 
-    return tabs
+    return tabs, monthly_dfs
     
     
 
@@ -260,7 +280,6 @@ def geographical_view(df: pd.DataFrame, gdf: gpd.GeoDataFrame):
     meow['Sales'] = meow['Sales']-1
     sales_per_currency[~sales_per_currency['Country Code of Buyer'].isin(currencies_with_sales)] = meow
 
-    print(sales_per_currency)
     # 38 countries with sales
     gdf = gdf.merge(
         right=sales_per_currency,
