@@ -18,7 +18,7 @@ from bokeh.resources import Resources
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import TabPanel, Tabs, Tooltip, Div, ColorBar, LinearColorMapper
-from bokeh.palettes import Bokeh8, OrRd9, Viridis256, BuPu9, Oranges9
+from bokeh.palettes import Bokeh8, OrRd9, Viridis256, BuPu9, Oranges9, Magma11, RdPu9
 from bokeh.transform import linear_cmap
 
 FONT = 'DM Sans'
@@ -58,7 +58,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame):
 
     title_div = Div(
         text='''Dashboard for ''',
-        styles={'font-family': 'DM Sans', 'font-size': '5rem', 'text-align':'center'},
+        styles={'font-family': 'DM Sans', 'font-size': '4rem', 'text-align':'center'},
         height=100,
         width=500,
         width_policy='fit',
@@ -66,7 +66,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame):
     )
 
     img_div = Div(
-        text='<img src="https://complete-reference.com/img/logo2.png">',
+        text='<img src="https://complete-reference.com/img/logo2.png" width=100 height=100>',
         styles={'font-family': 'DM Sans', 'max-width':'50%', 'max-height':'50%', 'height': 'auto'},
         height=100,
         width=100,
@@ -84,6 +84,8 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame):
 
     # Get our awesome choropleth
     choropleth = geographical_view(df, geodf)
+
+    geographical_over_time(monthly_dfs, geodf)
 
     final_layout = column(
         children=[top_div, sales_tabs, choropleth],
@@ -295,7 +297,7 @@ def geographical_view(df: pd.DataFrame, gdf: gpd.GeoDataFrame):
     geosource_no_sales = get_geodatasource(gdf_no_sales)
 
     # Visualizing part
-    palette = Oranges9[:-2]
+    palette = RdPu9[:-2]
     palette = palette[::-1]
 
     cmap = LinearColorMapper(
@@ -351,9 +353,28 @@ def geographical_view(df: pd.DataFrame, gdf: gpd.GeoDataFrame):
         fill_alpha=.7,
         line_width=.5,
         line_color='black',
-        fill_color=Oranges9[-1]
+        fill_color=RdPu9[-1]
     )
 
     choropleth.title.text_font = FONT
 
     return choropleth
+
+def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
+    curdoc().theme = 'dark_minimal'
+
+    sales_per_currency_per_month = []
+    for month in monthly_dfs:
+        # Filter out the countries we initially had data for
+        currencies_with_sales = month[month['_merge'] == 'both']
+        currencies_with_sales = set(currencies_with_sales['Country Code of Buyer'])
+
+        # Get and array of tuples (Country Code, Sales)
+        sales_per_currency = [(country_code, len(month[month['Country Code of Buyer'] == country_code])) for country_code in currencies_with_sales]
+        sales_per_currency = pd.DataFrame(sales_per_currency, columns=['Country Code of Buyer','Sales'])
+
+        sales_per_currency_per_month.append(sales_per_currency)
+
+    print(sale)
+    for month in sales_per_currency:
+        print(month)
