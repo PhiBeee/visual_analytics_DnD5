@@ -1,7 +1,6 @@
 # Filtering operations on our dataframes
 import pandas as pd
 import geopandas as gpd
-import panel as pn
 
 # For the Choropleth
 import json
@@ -187,7 +186,28 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
     # Fill empty entries (which is before that currency gets a sale)
     merged_data = merged_data.fillna(0)
 
-    #TBD
+    total_sales = []
+    countries = []
     for index, row in merged_data.iterrows():
-        continue
+        total_sales.append(row[1:].values.tolist())
+        countries.append(row[0])
+
+    multi_line_fig = figure(
+        title='Total Sales over time',
+        width=750,
+        height=500,
+        x_axis_label='Month of 2021',
+        y_axis_label='Amount of Sales',
+        x_range=month_names,
+        toolbar_location=None,
+        tools='hover',
+    )
+
+    for idx, sales in enumerate(total_sales):
+        country =  countries[idx]
+        multi_line_fig.line(
+            x=month_names
+        )
+
+    return multi_line_fig
 

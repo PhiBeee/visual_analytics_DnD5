@@ -85,10 +85,10 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame):
     # Get our awesome choropleth
     choropleth = geographical_view(df, geodf)
 
-    geographical_over_time(monthly_dfs, geodf)
+    multi_line = geographical_over_time(monthly_dfs, geodf)
 
     final_layout = column(
-        children=[top_div, sales_tabs, choropleth],
+        children=[top_div, sales_tabs, multi_line, choropleth],
         align='center'
     )
 
