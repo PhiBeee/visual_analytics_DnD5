@@ -7,12 +7,12 @@ import json
 
 # Bokeh shenanigans (try avoiding show if possible to test things, just use save with test.html)
 from bokeh.plotting import figure
-from bokeh.models import GeoJSONDataSource
+from bokeh.models import GeoJSONDataSource, Tabs, TabPanel, Tooltip
 
 # HTML manipulation and visuals
 from bokeh.io import curdoc
-from bokeh.models import ColorBar, LinearColorMapper
-from bokeh.palettes import RdPu9
+from bokeh.models import ColorBar, LinearColorMapper, Legend, Select
+from bokeh.palettes import RdPu9, Turbo256
 
 FONT = 'DM Sans'
 
@@ -120,9 +120,12 @@ def geographical_view(df: pd.DataFrame, gdf: gpd.GeoDataFrame):
 
     return choropleth
 
+
 def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
     curdoc().theme = 'dark_minimal'
+    
     month_names = ['June', 'July', 'August', 'September', 'October', 'November', 'December']
+    month_datetime = pd.to_datetime(['2021-06-01', '2021-07-01', '2021-08-01', '2021-09-01', '2021-10-01', '2021-11-01', '2021-12-01'])
 
     sales_per_currency_per_month = []
     for idx, month in enumerate(monthly_dfs):
@@ -186,6 +189,108 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
     # Fill empty entries (which is before that currency gets a sale)
     merged_data = merged_data.fillna(0)
 
+    cols = merged_data.columns.tolist()[1:]
+
+    # Visualizing part
+    palette = RdPu9[:-2]
+    palette = palette[::-1]
+
+    cmap = LinearColorMapper(
+        palette=palette,
+        low=1,
+        high=115,
+    )
+
+    cbar = ColorBar(
+        color_mapper=cmap,
+        label_standoff=9,
+        width=500,
+        height=20,
+        location=(550,0),
+        orientation='horizontal'
+    )
+
+    tabs = []
+    # This amalgamation of code is creating the multiple choropleths and placing them in TabPanels
+    for col in cols:
+        month = col.split(' ')[-1]
+        monthly_data = merged_data[['Country Code of Buyer', col]]
+
+        gdf_monthly = gdf.merge(
+            right=monthly_data,
+            left_on='Country Code of Buyer',
+            right_on='Country Code of Buyer',
+        )
+
+        gdf_monthly_sales = gdf_monthly[gdf_monthly[col]!=0]
+        gdf_monthly_no_sales = gdf_monthly[gdf_monthly[col]==0]
+
+        print(gdf_monthly_sales)
+        print(gdf_monthly_no_sales)
+
+        geosource = get_geodatasource(gdf_monthly_sales)
+        geosource_no_sales = get_geodatasource(gdf_monthly_no_sales)
+
+        # Format the tooltips because of funky spacing
+        tooltip_1 = '{Country Code of Buyer}'
+        tooltip_2 = '{' + col + '}'
+
+        choropleth = figure(
+            title='Sales per country',
+            toolbar_location=None,
+            tools='hover',
+            tooltips=f'@{tooltip_1}: @{tooltip_2}',
+            x_axis_location=None,
+            y_axis_location=None,
+            width=1600,
+            height=900
+        )
+
+        choropleth.grid.grid_line_color = None
+
+        choropleth.patches(
+            xs='xs',
+            ys='ys',
+            source=geosource,
+            fill_alpha=.7,
+            line_width=.5,
+            line_color='black',
+            fill_color={
+                'field': 'Sales',
+                'transform': cmap,
+            }
+        )
+
+        choropleth.patches(
+            xs='xs',
+            ys='ys',
+            source=geosource_no_sales,
+            fill_alpha=.7,
+            line_width=.5,
+            line_color='black',
+            fill_color=RdPu9[-1]
+        )
+
+        choropleth.add_layout(
+            cbar,
+            'below'
+        )
+
+        tab = TabPanel(
+            child=choropleth,
+            title=col,
+            tooltip=Tooltip(content=f'This is the accumulated for {month}', position='bottom_center')
+        )
+
+        tabs.append(tab)
+
+    tabs = Tabs(
+        tabs=tabs,
+        styles={'font-family': 'DM Sans'},
+        align='center'
+    )
+
+    # Get rid of column labels
     total_sales = []
     countries = []
     for index, row in merged_data.iterrows():
@@ -194,20 +299,47 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
 
     multi_line_fig = figure(
         title='Total Sales over time',
-        width=750,
-        height=500,
+        height=375,
+        width=900,
         x_axis_label='Month of 2021',
         y_axis_label='Amount of Sales',
         x_range=month_names,
-        toolbar_location=None,
-        tools='hover',
+        toolbar_location='left',
+        tools='pan,wheel_zoom,box_zoom',
     )
-
+    legend_moment = []
+    # Create a line for each country
     for idx, sales in enumerate(total_sales):
-        country =  countries[idx]
-        multi_line_fig.line(
-            x=month_names
+        current_country = countries[idx]
+
+        data = {
+            'Total Sales': sales,
+            'Months': month_names,
+        }
+
+        buh = multi_line_fig.line(
+            source=data,
+            x='Months',
+            y='Total Sales',
+            color=Turbo256[idx*6],
+            muted_color=Turbo256[idx*6],
+            muted_alpha=.2
         )
 
-    return multi_line_fig
+        legend_moment.append((current_country, [buh]))
+
+    legend_moment = Legend(items=legend_moment, ncols=3, styles={'font-family': 'DM Sans'})
+    legend_moment.click_policy = 'mute'
+
+    multi_line_fig.add_layout(legend_moment, 'right')
+    multi_line_fig.y_range.start = 0
+    multi_line_fig.y_range.end = 1400
+
+    multi_line_fig.legend.title_text_font = FONT
+    multi_line_fig.legend.label_text_font = FONT
+    multi_line_fig.title.text_font = FONT
+    multi_line_fig.axis.major_label_text_font = FONT
+    multi_line_fig.axis.axis_label_text_font = FONT
+
+    return multi_line_fig, tabs
 

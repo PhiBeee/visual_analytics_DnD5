@@ -59,7 +59,7 @@ def sales_volume(df: pd.DataFrame):
         x_range=months,
         toolbar_location=None,
         tools='hover',
-        tooltips='$name @months: @$name'
+        tooltips='$name @months: @$name',
     )
 
     euro_fig.vbar_stack(
@@ -120,12 +120,12 @@ def sales_volume(df: pd.DataFrame):
 
     pie_fig = figure(
         title='Sales per currency',
-        height=500,
-        width=750,
+        height=300,
+        width=500,
         toolbar_location=None,
         tools='hover',
         tooltips='@Currency: @Sales',
-        x_range=(-.5, 1.0)
+        x_range=(-.5, 1.0),
     )
 
     pie_fig.wedge(
@@ -148,12 +148,6 @@ def sales_volume(df: pd.DataFrame):
     pie_fig.legend.label_text_font = FONT
     pie_fig.title.text_font= FONT
 
-    tabs = Tabs(tabs=[
-        TabPanel(child=euro_fig, title='EUR', tooltip=Tooltip(content='Sales in Euro', position='bottom_center')),
-        TabPanel(child=pie_fig, title='Currencies Pie', tooltip=Tooltip(content='Amount of Sales per Currency but in a pie chart', position='bottom_center')),
-        ],
-        styles={'font-family': 'DM Sans', 'font-size': '1rem'},
-        align='center'
-    )
+    
 
-    return tabs, monthly_dfs
+    return euro_fig, pie_fig, monthly_dfs

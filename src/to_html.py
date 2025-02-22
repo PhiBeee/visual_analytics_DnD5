@@ -80,18 +80,28 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     )
 
     # Get the Sales Volume plots
-    sales_tabs, monthly_dfs = sales_volume(df)
+    sales_bar, currency_pie, monthly_dfs = sales_volume(df)
 
     # Get our awesome choropleth
     choropleth = geographical_view(df, geodf)
 
-    multi_line = geographical_over_time(monthly_dfs, geodf)
+    multi_line, monthly_choro = geographical_over_time(monthly_dfs, geodf)
+
+    top_column = column(
+        children=[sales_bar, currency_pie],
+        align='center'
+    )
+
+    top_figures = row(
+        children=[top_column, multi_line],
+        align='center'
+    )
 
     # Get the new ratings and stability thing, hopefully
     stability_plot = ratings_and_stability(crashdf,ratingdf) #nothing returned right now
 
     final_layout = column(
-        children=[top_div, sales_tabs, multi_line, choropleth, stability_plot],
+        children=[top_div, top_figures, choropleth, stability_plot, monthly_choro],
         align='center'
     )
 
