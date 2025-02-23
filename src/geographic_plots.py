@@ -112,7 +112,7 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
         label_standoff=9,
         width=500,
         height=20,
-        location=(550,0),
+        location=(450,0),
         orientation='horizontal'
     )
 
@@ -150,7 +150,7 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
             tooltips=f'@{tooltip_1}: @{tooltip_2}',
             x_axis_location=None,
             y_axis_location=None,
-            width=1600,
+            width=1400,
             height=900
         )
 

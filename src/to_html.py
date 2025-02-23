@@ -2,6 +2,7 @@
 from geographic_plots import *
 from sales_volume_plots import *
 from ratings_and_stability_plots import *
+from time_plots import *
 
 # Filtering operations on our dataframes
 import pandas as pd
@@ -58,6 +59,8 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
 
     multi_line, monthly_choro = geographical_over_time(monthly_dfs, geodf)
 
+    hourly_figure = hourly_sales_fig(df)
+
     # Get the new ratings and stability thing, hopefully
     stability_plot = ratings_and_stability(crashdf,ratingdf) #nothing returned right now
 
@@ -95,7 +98,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     )
 
     bottom_row = row(
-        children=[currency_pie, multi_line],
+        children=[currency_pie, hourly_figure],
         align='center'
     )
     

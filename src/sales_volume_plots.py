@@ -121,7 +121,7 @@ def sales_volume(df: pd.DataFrame):
     pie_fig = figure(
         title='Sales per currency',
         height=350,
-        width=500,
+        width=400,
         toolbar_location=None,
         tools='hover',
         tooltips='@Currency: @Sales',
