@@ -1,7 +1,6 @@
-from bokeh.plotting import figure, show
-from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure
+
 import pandas as pd
-from bokeh.models import DatetimeTickFormatter
 import datetime
 
 FONT = 'DM Sans'
@@ -79,7 +78,7 @@ def hourly_sales_fig(df: pd.DataFrame):
         source=data,
         x='Time',
         y='Sales',
-        color='red',
+        color='#fe0369',
         line_width=2
     )
     

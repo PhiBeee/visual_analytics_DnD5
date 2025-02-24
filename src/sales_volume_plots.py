@@ -10,7 +10,6 @@ from bokeh.transform import cumsum
 
 # HTML manipulation and visuals
 from bokeh.io import curdoc
-from bokeh.models import TabPanel, Tabs, Tooltip
 from bokeh.palettes import Bokeh8
 
 FONT = 'DM Sans'
