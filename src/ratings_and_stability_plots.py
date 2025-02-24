@@ -19,7 +19,10 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
     #TODO: Later, the visuals. First make this function in a basic way.
     
     #filtered_df = df[df['column_name'] == 'row_data']
-
+    # let's try absolute scaling
+    #crashdf['Daily Crashes'] = crashdf['Daily Crashes']  /crashdf['Daily Crashes'].abs().max() #works well enough
+    #crashdf['Daily ANRs'] = crashdf['Daily ANRs']  /crashdf['Daily ANRs'].abs().max() #will this work?
+    #ratingdf['Total Average Rating'] = ratingdf['Total Average Rating'] /ratingdf['Total Average Rating'].abs().max() 
     # Get monthly entries
     df_june      = crashdf[(crashdf['Date'] >= '2021-06-01') & (crashdf['Date'] < '2021-07-01')]
     df_july      = crashdf[(crashdf['Date'] >= '2021-07-01') & (crashdf['Date'] < '2021-08-01')]
@@ -46,14 +49,20 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
 
     for month in monthly_dfs:
         # grab the crashes and ARNs
-        crashes = month['Daily Crashes']
+        crashes = month['Daily Crashes'] 
         ANR = month['Daily ANRs']
         # Add the monthly sums to a list
-        monthly_crashes.append(crashes.sum()/200)
-        monthly_ARNs.append(ANR.sum()/5)
+        monthly_crashes.append(crashes.sum()/200)#do note the division, as it does 'change' the data
+        monthly_ARNs.append(ANR.sum()/5)#do note the division, as it does 'change' the data
     for month in monthly_dfs_ratings:
-        monthly_average_rating = month['Total Average Rating'].iloc[0] #will this work? let's find out
-        monthly_average_ratings.append((monthly_average_rating-4.5)*100)
+        notNAperMonth = 0
+        totalMonth = 0
+        betterMonth = month[~month['Daily Average Rating'].isna()]
+        for value in betterMonth['Daily Average Rating']:
+            notNAperMonth += 1
+            totalMonth += value
+        monthly_average_rating = totalMonth/notNAperMonth
+        monthly_average_ratings.append((monthly_average_rating))
 
     
     months = ['June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -64,21 +73,21 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
             'ANRs': monthly_ARNs}
     
     crashes_fig = figure(
-	    title="ratings and stability TEST",
+	    title="ratings compared to stability",
         width= 650,
         height=500,
         x_axis_label='Month of 2021',
-        y_axis_label='Other data?',
+        y_axis_label='Average number of Xs that month',
         x_range=months,#other things like tooltip stuff might be nice
         toolbar_location=None,
         tools='hover',
-        tooltips='@months: @data?'
+        tooltips='@months: rating @ratings: crashes/200 @crashes: ANRs/5 @ANRs'
     )
     crashes_fig.line(
         x='months',
         y='ratings',
         color='blue',
-        legend_label="Temp.", 
+        legend_label="ratings", 
         line_width=2,
         source = data
     )
@@ -86,7 +95,7 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
         x='months',
         y='crashes',
         color='red',
-        legend_label="Temp.", 
+        legend_label="crashes /200", 
         line_width=2,
         source = data
     )
@@ -94,7 +103,7 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
         x='months',
         y='ANRs',
         color='yellow',
-        legend_label="Temp.", 
+        legend_label="ANRs /5", 
         line_width=2,
         source = data
     )
