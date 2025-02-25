@@ -207,7 +207,7 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
     countries = []
     for index, row in merged_data.iterrows():
         total_sales.append(row[1:].values.tolist())
-        countries.append(row[0])
+        countries.append(row.iloc[0])
 
     multi_line_fig = figure(
         title='Total Sales over time',
