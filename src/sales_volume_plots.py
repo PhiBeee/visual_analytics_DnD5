@@ -10,7 +10,7 @@ from bokeh.transform import cumsum
 
 # HTML manipulation and visuals
 from bokeh.io import curdoc
-from bokeh.palettes import Bokeh8
+from bokeh.palettes import Spectral8
 
 FONT = 'DM Sans'
 
@@ -40,7 +40,7 @@ def sales_volume(df: pd.DataFrame):
     
     months = ['June', 'July', 'August', 'September', 'October', 'November', 'December']
     product_types = ['Premium', 'Unlock Character Manager']
-    colors = ['#0236a5', '#fe0369']
+    colors = ['#407ee8', '#fe0369']
 
     data = {'months' : months,
             'Premium':  monthly_premium,
@@ -91,6 +91,7 @@ def sales_volume(df: pd.DataFrame):
     euro_fig.title.text_font = FONT
     euro_fig.axis.major_label_text_font = FONT
     euro_fig.axis.axis_label_text_font = FONT
+    euro_fig.axis.axis_label_text_align = 'left'
 
     # SECOND FIGURE 
 
@@ -115,12 +116,12 @@ def sales_volume(df: pd.DataFrame):
     # Turn our data back into a df to then calculate angles for our pie
     data = pd.DataFrame(currency_data)
     data['angle'] = data['Sales']/data['Sales'].sum() * 2*pi
-    data['color'] = Bokeh8
+    data['color'] = Spectral8
 
     pie_fig = figure(
         title='Sales per currency',
         height=350,
-        width=400,
+        width=350,
         toolbar_location=None,
         tools='hover',
         tooltips='@Currency: @Sales',
@@ -128,9 +129,9 @@ def sales_volume(df: pd.DataFrame):
     )
 
     pie_fig.wedge(
-        x=.25,
+        x=.10,
         y=1,
-        radius=.4,
+        radius=.5,
         start_angle=cumsum('angle', include_zero=True),
         end_angle=cumsum('angle'),
         line_color='black',
@@ -143,9 +144,12 @@ def sales_volume(df: pd.DataFrame):
     pie_fig.axis.axis_label = None
     pie_fig.axis.visible = False
     pie_fig.grid.grid_line_color = None
+    pie_fig.background_fill_color= (21, 25, 28)
+    pie_fig.outline_line_color = '#15191c'
 
     pie_fig.legend.label_text_font = FONT
     pie_fig.title.text_font= FONT
+    pie_fig.title.align = 'center'
 
     
 

@@ -56,8 +56,8 @@ def hourly_sales_fig(df: pd.DataFrame):
 
     hourly_fig = figure(
         title='Hourly Sales',
-        width=1000,
-        height=350,
+        width=1400,
+        height=550,
         x_axis_label='Hour of the day',
         y_axis_label='Sales',
         x_range=times,
@@ -71,7 +71,7 @@ def hourly_sales_fig(df: pd.DataFrame):
         x='Time',
         top='Sales',
         width=.95,
-        color='#0236a5'
+        color='#407ee8'
     )
 
     hourly_fig.line(

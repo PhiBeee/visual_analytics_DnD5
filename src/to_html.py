@@ -3,6 +3,7 @@ from geographic_plots import *
 from sales_volume_plots import *
 from ratings_and_stability_plots import *
 from time_plots import *
+from donut_plot import *
 
 # Filtering operations on our dataframes
 import pandas as pd
@@ -61,6 +62,8 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
 
     hourly_figure = hourly_sales_fig(df)
 
+    donut, text = donut_plot(df, monthly_dfs)
+
     # Get the new ratings and stability thing, hopefully
     stability_plot = ratings_and_stability(crashdf,ratingdf) #nothing returned right now
 
@@ -98,7 +101,12 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     )
 
     bottom_row = row(
-        children=[currency_pie, hourly_figure],
+        children=[hourly_figure],
+        align='center'
+    )
+
+    right_col = column(
+        children=[text, donut, currency_pie],
         align='center'
     )
     
@@ -107,8 +115,12 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         align='center'
     )
 
+    chungus = row(
+        children=[top_column, right_col]
+    )
+
     final_layout = column(
-        children=[top_div, top_column, monthly_choro],
+        children=[top_div, chungus, monthly_choro],
         align='center'
     )
 

@@ -73,7 +73,7 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
             'ANRs': monthly_ARNs}
     
     crashes_fig = figure(
-	    title="ratings compared to stability",
+	    title="Ratings compared to Stability",
         width= 650,
         height=500,
         x_axis_label='Month of 2021',
