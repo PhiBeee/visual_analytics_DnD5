@@ -28,9 +28,10 @@ These need to be added to the final html head to get the right font and look, ot
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
 # navigation bar to be added to each html file, because bokeh does funky stuff
     <div class="topnav">
-      <a class='active' href="/main.html">Home</a>
-      <a href="/chropleth.html">Geographic Data</a>
-      <img src="https://complete-reference.com/img/logo2.png" width=60 height=60>
+      <a class='active' href="https://liacs.leidenuniv.nl/~s3555380/main.html">Home</a>
+      <a href="https://liacs.leidenuniv.nl/~s3555380/choropleth.html">Geographic Data</a>
+      <a href="https://liacs.leidenuniv.nl/~s3555380/crashes.html">Crashes and Ratings</a>
+      <img src="https://complete-reference.com/img/logo2.png" width=65 height=65>
     </div>
 """
 
@@ -49,6 +50,8 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     hourly_figure = hourly_sales_fig(df)
 
     donut, text = donut_plot(df, monthly_dfs)
+
+    rating_choro = geographic_ratings(ratingdf, geodf)
 
     # Get the new ratings and stability thing, hopefully
     stability_plot = ratings_and_stability(crashdf,ratingdf) #nothing returned right now
@@ -75,11 +78,11 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
 
         body{
             display: table-cell;
-            vertical-align: middle;
+            vertical-align: top;
         }
 
         .topnav{
-            background-color: #0c0d0f;
+            background-color: #080808;
             overflow: hidden;
         }
 
@@ -149,7 +152,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     choro_style = styles.clone()
     choro_ressources = resources.clone()
     choro_page = column(
-        children=[monthly_choro],
+        children=[monthly_choro, rating_choro],
         stylesheets=[choro_style],
         align='center'
     )

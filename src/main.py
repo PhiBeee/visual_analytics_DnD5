@@ -12,9 +12,14 @@ def main():
     print('Getting geographical data')
     final_df, geodf = better_geographical_data(df_no_geographical)
 
+    print('Getting Crash data')
     crashdf = get_data_from_csv_cleaner('stats_crashes')
     
+    print('Getting Ratings data')
     ratingdf = get_data_from_csv_cleaner('stats_ratings_country')
+
+    print('Cleaning country ratings')
+    ratingdf = clean_country_ratings(ratingdf)
     # Visualizing data
     print('Making the html file')
     final_html(final_df, geodf, crashdf, ratingdf)

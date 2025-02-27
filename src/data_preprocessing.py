@@ -152,7 +152,14 @@ def clean_country_ratings(df: pd.DataFrame):
     # This is here really just for being here sake, the data is already filtered
     # Filter to only the app we want
     df = df[df['Package Name'] == product_id]
-    # We might want to calculate the daily average where we don't have it, this is just a placeholder for now      
+    #Convert the country code to iso3 so we can use it with the shapefile
+    iso3_cc = cc.convert(
+        names=df['Country'],
+        to='ISO3'
+    )  
+
+    df['Country'] = iso3_cc
+    
     return df 
 
 # This function adds geometry data to our df to make a choropleth

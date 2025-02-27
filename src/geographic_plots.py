@@ -113,7 +113,8 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
         width=500,
         height=20,
         location=(625,0),
-        orientation='horizontal'
+        orientation='horizontal',
+        major_label_text_font='DM Sans'
     )
 
     tabs = []
@@ -145,8 +146,8 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
 
         choropleth = figure(
             title='Sales per country',
-            toolbar_location=None,
-            tools='hover',
+            toolbar_location='right',
+            tools='hover,box_zoom,reset',
             tooltips=f'@{tooltip_1}: @{tooltip_2}',
             x_axis_location=None,
             y_axis_location=None,
@@ -254,3 +255,85 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
     multi_line_fig.axis.axis_label_text_font = FONT
 
     return multi_line_fig, tabs
+
+def geographic_ratings(ratings_df: pd.DataFrame, gdf: gpd.GeoDataFrame):
+    for country in set(ratings_df['Country']):
+        countrydf = ratings_df[ratings_df['Country'] == country]
+        rating_sum = sum(countrydf['Total Average Rating'])
+        rating_avg = rating_sum/len(countrydf)
+        
+        gdf.loc[gdf['Country Code of Buyer']==country, 'Rating Average'] = rating_avg
+
+    gdf = gdf.fillna(0)
+
+    countries_with_ratings = gdf[gdf['Rating Average'] != 0]
+    countries_with_no_ratings = gdf[gdf['Rating Average'] == 0]
+
+    geosource_ratings = get_geodatasource(countries_with_ratings)
+    geosource_no_ratings = get_geodatasource(countries_with_no_ratings)
+
+    # DATA VISUALIZATION
+
+    palette = RdPu9[:-2]
+    palette = palette[::-1]
+
+    cmap = LinearColorMapper(
+        palette=palette,
+        low=0.01,
+        high=5,
+    )
+
+    cbar = ColorBar(
+        color_mapper=cmap,
+        label_standoff=9,
+        width=500,
+        height=20,
+        location=(625,0),
+        orientation='horizontal',
+        major_label_text_font='DM Sans'
+    )
+
+    rating_choro = figure(
+        title='Total average rating per country',
+        toolbar_location='right',
+        tools='hover,box_zoom,reset',
+        tooltips='@{Country of Buyer}: @{Rating Average}{0.00} ',
+        x_axis_location=None,
+        y_axis_location=None,
+        width=1750,
+        height=900
+    )
+
+    rating_choro.grid.grid_line_color = None
+
+    rating_choro.patches(
+        xs='xs',
+        ys='ys',
+        source=geosource_ratings,
+        fill_alpha=.7,
+        line_width=.5,
+        line_color='black',
+        fill_color={
+            'field':'Rating Average',
+            'transform': cmap,
+        }
+    )
+
+    rating_choro.patches(
+        xs='xs',
+        ys='ys',
+        source=geosource_no_ratings,
+        fill_alpha=.7,
+        line_width=.5,
+        line_color='black',
+        fill_color=RdPu9[-1]
+    )
+
+    rating_choro.add_layout(
+        cbar,
+        'below'
+    )
+
+    rating_choro.title.text_font = FONT
+
+    return rating_choro
