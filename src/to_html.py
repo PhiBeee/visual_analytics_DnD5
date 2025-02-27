@@ -17,7 +17,7 @@ from bokeh.resources import Resources
 # HTML manipulation and visuals
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import Div
+from bokeh.models import Div, GlobalInlineStyleSheet
 
 FONT = 'DM Sans'
 
@@ -26,26 +26,12 @@ These need to be added to the final html head to get the right font and look, ot
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-    <style>
-      html, body {
-        box-sizing: border-box;
-        padding: 0;
-        background-color: #15191c;
-        color: white;
-        align-items: center;
-      }
-
-      html{
-        display: table;
-        margin: auto;
-      }
-
-      body{
-        display: table-cell;
-        vertical-align: middle;
-      }
-      
-    </style>
+# navigation bar to be added to each html file, because bokeh does funky stuff
+    <div class="topnav">
+      <a class='active' href="/main.html">Home</a>
+      <a href="/chropleth.html">Geographic Data</a>
+      <img src="https://complete-reference.com/img/logo2.png" width=60 height=60>
+    </div>
 """
 
 # This function will bring together every other function to render the final html (well as much as we can with bokeh I'd rather just be writing proper html atp)
@@ -53,7 +39,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     # DATA AND PLOTTING
 
     # Get the Sales Volume plots
-    sales_bar, currency_pie, monthly_dfs = sales_volume(df)
+    sales_bar, sales_fig, currency_pie, monthly_dfs = sales_volume(df)
 
     # old choropleth func
     # choropleth = geographical_view(df, geodf)
@@ -72,31 +58,59 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         mode='cdn',
     )
 
-    title_div = Div(
-        text='''Dashboard for ''',
-        styles={'font-family': 'DM Sans', 'font-size': '4rem', 'text-align':'center'},
-        height=100,
-        width=500,
-        width_policy='fit',
-        align='center'
-    )
+    styles = GlobalInlineStyleSheet(
+        css='''
+        html, body {
+            box-sizing: border-box;
+            padding: 0;
+            background-color: #15191c;
+            color: white;
+            align-items: center;
+        }
 
-    img_div = Div(
-        text='<img src="https://complete-reference.com/img/logo2.png" width=100 height=100>',
-        styles={'font-family': 'DM Sans', 'max-width':'50%', 'max-height':'50%', 'height': 'auto'},
-        height=100,
-        width=100,
-        width_policy='fit',
-        align='center'
-    )
+        html{
+            display: table;
+            margin: auto;
+        }
 
-    top_div = row(
-        children=[title_div, img_div],
-        align='center'
+        body{
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .topnav{
+            background-color: #0c0d0f;
+            overflow: hidden;
+        }
+
+        .topnav a{
+            float: left;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 2em;
+            font-family: DM Sans;
+        }
+
+        .topnav img{
+            float: right;
+        }
+
+        .topnav a:hover {
+            background-color: #38761d;
+            color: white:
+        }
+
+        .topnav a.active {
+            background-color: green;
+            color: white;
+        }
+        '''
     )
 
     top_row = row(
-        children=[sales_bar, stability_plot],
+        children=[sales_bar, sales_fig],
         align='center'
     )
 
@@ -116,11 +130,12 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     )
 
     chungus = row(
-        children=[top_column, right_col]
+        children=[top_column, right_col],
+        stylesheets=[styles]
     )
 
     final_layout = column(
-        children=[top_div, chungus, monthly_choro],
+        children=[chungus],
         align='center'
     )
 
@@ -130,3 +145,18 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         title='DnD5 Data Visualisation',
         resources=resources
     )    
+
+    choro_style = styles.clone()
+    choro_ressources = resources.clone()
+    choro_page = column(
+        children=[monthly_choro],
+        stylesheets=[choro_style],
+        align='center'
+    )
+
+    save(
+        obj=choro_page,
+        filename='choropleths.html',
+        title='DnD5 Data Visualisation',
+        resources=choro_ressources
+    )
