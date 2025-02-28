@@ -11,7 +11,7 @@ import geopandas as gpd
 
 # Bokeh shenanigans (try avoiding show if possible to test things, just use save with test.html)
 from bokeh.plotting import figure, save
-from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter
+from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, CustomJS, Select
 from bokeh.resources import Resources
 
 # HTML manipulation and visuals
@@ -45,16 +45,62 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     # old choropleth func
     # choropleth = geographical_view(df, geodf)
 
-    multi_line, monthly_choro = geographical_over_time(monthly_dfs, geodf)
+    monthly_choro = geographical_over_time(monthly_dfs, geodf)
+    monthly_choro_2 = geographical_over_time(monthly_dfs, geodf)
 
     hourly_figure = hourly_sales_fig(df)
 
     donut, text = donut_plot(df, monthly_dfs)
 
-    rating_choro = geographic_ratings(ratingdf, geodf)
+    rating_choro, sales_choro = geographic_ratings(df, ratingdf, geodf)
+    rating_choro_2, sales_choro_2 = geographic_ratings(df, ratingdf, geodf)
 
     # Get the new ratings and stability thing, hopefully
     stability_plot = ratings_and_stability(crashdf,ratingdf) #nothing returned right now
+
+    # Cool select for geograhic data
+    rating_choro_2.visible = False
+    monthly_choro.visible = False
+
+    select = Select(title="Metric to show:", value="Ratings", options=["Ratings", "Revenue", 'Monthly Sales'])
+    select.js_on_change("value", CustomJS(args=dict(sales_choro=sales_choro, rating_choro=rating_choro, monthly_choro=monthly_choro), code="""
+
+    sales_choro.visible = true
+    rating_choro.visible = true
+    monthly_choro.visible = true
+
+    if (this.value === "Ratings") {
+        sales_choro.visible = false 
+        monthly_choro.visible = false
+    } else if (this.value === "Revenue") {
+        rating_choro.visible = false
+        monthly_choro.visible = false
+    } else {
+        sales_choro.visible = false
+        rating_choro.visible = false
+    }
+        
+    """))
+
+    select_2 = Select(title="Metric to show:", value="Monthly Sales", options=["Ratings", "Revenue", 'Monthly Sales'])
+    select_2.js_on_change("value", CustomJS(args=dict(sales_choro_2=sales_choro_2, rating_choro_2=rating_choro_2, monthly_choro_2=monthly_choro_2), code="""
+
+    sales_choro_2.visible = true
+    rating_choro_2.visible = true
+    monthly_choro_2.visible = true
+
+    if (this.value === "Ratings") {
+        sales_choro_2.visible = false 
+        monthly_choro_2.visible = false
+    } else if (this.value === "Revenue") {
+        rating_choro_2.visible = false
+        monthly_choro_2.visible = false
+    } else {
+        sales_choro_2.visible = false
+        rating_choro_2.visible = false
+    }
+        
+    """))
 
     # LAYOUT AND STYLING
     resources =  Resources(
@@ -112,6 +158,8 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         '''
     )
 
+    # Sales Data
+
     top_row = row(
         children=[sales_bar, sales_fig],
         align='center'
@@ -147,19 +195,49 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         filename='main.html',
         title='DnD5 Data Visualisation',
         resources=resources
-    )    
+    )  
+
+    # Geographic Data  
 
     choro_style = styles.clone()
     choro_ressources = resources.clone()
     choro_page = column(
-        children=[monthly_choro, rating_choro],
+        children=[select_2, monthly_choro_2, rating_choro_2, sales_choro_2],
         stylesheets=[choro_style],
         align='center'
     )
 
+    choro_page_2 = column(
+        children=[select, monthly_choro, rating_choro, sales_choro],
+        align='center'
+    )
+
+    buh = column(
+        children=[choro_page, choro_page_2],
+        align='center'
+    )
+
     save(
-        obj=choro_page,
+        obj=buh,
         filename='choropleths.html',
         title='DnD5 Data Visualisation',
         resources=choro_ressources
+    )
+
+    # Crashes and Ratings
+
+    crashes_style = styles.clone()
+    crashes_resources = resources.clone()
+
+    crashes_page = column(
+        children=[stability_plot],
+        stylesheets=[crashes_style],
+        align='center'
+    )
+
+    save(
+        obj=crashes_page,
+        filename='crashes.html',
+        title='DnD5 Data Visualisation',
+        resources=crashes_resources
     )

@@ -11,7 +11,8 @@ from bokeh.models import GeoJSONDataSource, Tabs, TabPanel, Tooltip
 
 # HTML manipulation and visuals
 from bokeh.io import curdoc
-from bokeh.models import ColorBar, LinearColorMapper, Legend, Select
+from bokeh.models import ColorBar, LinearColorMapper, Legend, Select, Select, CustomJS
+from bokeh.layouts import column
 from bokeh.palettes import RdPu9, Turbo256
 
 FONT = 'DM Sans'
@@ -254,15 +255,25 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
     multi_line_fig.axis.major_label_text_font = FONT
     multi_line_fig.axis.axis_label_text_font = FONT
 
-    return multi_line_fig, tabs
+    return tabs
 
-def geographic_ratings(ratings_df: pd.DataFrame, gdf: gpd.GeoDataFrame):
+def geographic_ratings(salesdf: pd.DataFrame ,ratings_df: pd.DataFrame, gdf: gpd.GeoDataFrame):
+
     for country in set(ratings_df['Country']):
+        # Rating DF
+
         countrydf = ratings_df[ratings_df['Country'] == country]
         rating_sum = sum(countrydf['Total Average Rating'])
         rating_avg = rating_sum/len(countrydf)
         
         gdf.loc[gdf['Country Code of Buyer']==country, 'Rating Average'] = rating_avg
+
+        # Sales DF
+
+        countrydf = salesdf[salesdf['Country Code of Buyer'] == country]
+        revenue_sum = sum(countrydf['Amount (Merchant Currency)'])
+
+        gdf.loc[gdf['Country Code of Buyer']==country, 'Total Revenue'] = revenue_sum
 
     gdf = gdf.fillna(0)
 
@@ -271,6 +282,12 @@ def geographic_ratings(ratings_df: pd.DataFrame, gdf: gpd.GeoDataFrame):
 
     geosource_ratings = get_geodatasource(countries_with_ratings)
     geosource_no_ratings = get_geodatasource(countries_with_no_ratings)
+
+    countries_with_sales = gdf[gdf['Total Revenue'] != 0]
+    countries_with_no_sales = gdf[gdf['Total Revenue'] == 0]
+
+    geosource_sales = get_geodatasource(countries_with_sales)
+    geosource_no_sales = get_geodatasource(countries_with_no_sales)
 
     # DATA VISUALIZATION
 
@@ -336,4 +353,64 @@ def geographic_ratings(ratings_df: pd.DataFrame, gdf: gpd.GeoDataFrame):
 
     rating_choro.title.text_font = FONT
 
-    return rating_choro
+    cmap = LinearColorMapper(
+        palette=palette,
+        low=10,
+        high=400,
+    )
+
+    cbar = ColorBar(
+        color_mapper=cmap,
+        label_standoff=9,
+        width=500,
+        height=20,
+        location=(625,0),
+        orientation='horizontal',
+        major_label_text_font='DM Sans'
+    )
+
+    sales_choro = figure(
+        title='Total average rating per country',
+        toolbar_location='right',
+        tools='hover,box_zoom,reset',
+        tooltips='@{Country of Buyer}: @{Total Revenue}{0.00} €',
+        x_axis_location=None,
+        y_axis_location=None,
+        width=1750,
+        height=900,
+        visible=False,
+    )
+
+    sales_choro.grid.grid_line_color = None
+
+    sales_choro.patches(
+        xs='xs',
+        ys='ys',
+        source=geosource_sales,
+        fill_alpha=.7,
+        line_width=.5,
+        line_color='black',
+        fill_color={
+            'field':'Total Revenue',
+            'transform': cmap,
+        }
+    )
+
+    sales_choro.patches(
+        xs='xs',
+        ys='ys',
+        source=geosource_no_sales,
+        fill_alpha=.7,
+        line_width=.5,
+        line_color='black',
+        fill_color=RdPu9[-1]
+    )
+
+    sales_choro.add_layout(
+        cbar,
+        'below'
+    )
+
+    sales_choro.title.text_font = FONT
+
+    return rating_choro, sales_choro
