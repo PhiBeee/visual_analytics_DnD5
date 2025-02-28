@@ -56,7 +56,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     rating_choro_2, sales_choro_2 = geographic_ratings(df, ratingdf, geodf)
 
     # Get the new ratings and stability thing, hopefully
-    stability_plot = ratings_and_stability(crashdf,ratingdf) #nothing returned right now
+    stability_plot = ratings_and_stability(crashdf,ratingdf, monthly_dfs) #nothing returned right now
 
     # Cool select for geograhic data
     rating_choro_2.visible = False

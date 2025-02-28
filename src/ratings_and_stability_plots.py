@@ -12,7 +12,7 @@ from bokeh.palettes import Bokeh8
 
 FONT = 'DM Sans'
 
-def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
+def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame, monthly_sales_df: pd.DataFrame):
     # TODO: Key performance indicators to understand stability related to ratings, This is Lars task now.
     
     #works with panda's dataframe. grab total average rating (for that month) and sum daily crashes and ANR. Lineplot with crashes on x-axis, and ratings on the y axis
@@ -47,6 +47,16 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
     monthly_ARNs = []
     monthly_average_ratings = []
 
+    cum_sales = []
+
+    for idx, month in enumerate(monthly_sales_df):
+        monthly_sales = len(month)
+        if idx == 0:\
+            cum_sales.append(monthly_sales)
+        else:
+            accum = cum_sales[idx-1] + monthly_sales
+            cum_sales.append(accum)
+
     for month in monthly_dfs:
         # grab the crashes and ARNs
         crashes = month['Daily Crashes'] 
@@ -66,10 +76,11 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
 
     
     months = ['June', 'July', 'August', 'September', 'October', 'November', 'December']
+    categories =  ['Ratings', 'ANRs', 'Crashes']
 
     data = {'months' : months, #now play around with plotting what where
-            'ratings':  monthly_average_ratings,
-            'crashes': monthly_crashes,
+            'Ratings':  monthly_average_ratings,
+            'Crashes': monthly_crashes,
             'ANRs': monthly_ARNs}
     
     crashes_fig = figure(
@@ -81,21 +92,21 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
         x_range=months,#other things like tooltip stuff might be nice
         toolbar_location=None,
         tools='hover',
-        tooltips='@months: rating @ratings: crashes/200 @crashes: ANRs/5 @ANRs'
+        tooltips='$name in @months: @$name'
     )
     crashes_fig.line(
         x='months',
-        y='ratings',
+        y='Ratings',
         color='blue',
-        legend_label="ratings", 
+        legend_label="Ratings", 
         line_width=2,
         source = data
     )
     crashes_fig.line(
         x='months',
-        y='crashes',
+        y='Crashes',
         color='red',
-        legend_label="crashes /200", 
+        legend_label="Crashes /200", 
         line_width=2,
         source = data
     )
@@ -116,3 +127,13 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
     crashes_fig.axis.axis_label_text_font = FONT
 
     return crashes_fig
+
+def crashes_and_ratings_stats(monthly_crash_dfs, monthly_ratings_dfs, crashdf, ratingdf):
+    crashes_last_month = monthly_crash_dfs.iloc[-1]
+    crashes_penultimate_month = monthly_crash_dfs.iloc[-2]
+
+    crashes_last_month = sum(crashes_last_month['Daily Crashes'])
+    crashes_penultimate_month = sum(crashes_penultimate_month['Daily Crashes'])
+
+    crashes_diff = crashes_penultimate_month - crashes_last_month
+    crashes_diff_percentage = crashes_diff/crashes_penultimate_month*100
