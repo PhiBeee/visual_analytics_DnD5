@@ -1,0 +1,52 @@
+html, body {
+    box-sizing: border-box;
+    padding: 0;
+    background-color: #15191c;
+    color: white;
+    align-items: center;
+}
+
+html{
+    display: table;
+    margin: auto;
+}
+
+body{
+    display: table-cell;
+    vertical-align: top;
+}
+
+.topnav{
+    background-color: #080808;
+    overflow: hidden;
+    box-shadow: 0px 3px 0px #434a50;
+}
+
+.topnav a{
+    float: left;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 2em;
+    font-family: DM Sans;
+}
+
+.topnav img{
+    float: right;
+}
+
+.topnav a:hover {
+    background-color: #38761d;
+    color: white;
+}
+
+.topnav a.active {
+    background-color: green;
+    color: white;
+}
+
+.bk-input {
+    background-color: #15191c;
+    color: white;
+}

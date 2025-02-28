@@ -10,28 +10,55 @@ from bokeh.models import DatetimeTickFormatter, Range1d, Label
 import datetime
 from bokeh.transform import cumsum
 
+
+FONT = 'DM Sans'
+
 df = get_data_from_csv_cleaner('sales')
 
 df = clean_sales(df)
 
-df, geodf = better_geographical_data(df)
+days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-ratingdf = get_data_from_csv_cleaner('stats_ratings_country')
+daily_sales = []
+print(set(df['Day of Week']))
+for day in set(df['Day of Week']):
+    daydf = df[df['Day of Week'] == day]
+    daily_sale = len(daydf)
+    
+    daily_sales.append(daily_sale)
 
-ratingdf = clean_country_ratings(ratingdf)
+data = {
+    'days': days,
+    'Daily Sales': daily_sales
+}
 
-def geographic_ratings(ratings_df: pd.DataFrame, gdf: gpd.GeoDataFrame):
-    for country in set(ratings_df['Country']):
-        countrydf = ratings_df[ratings_df['Country'] == country]
-        rating_sum = sum(countrydf['Total Average Rating'])
-        rating_avg = rating_sum/len(countrydf)
-        
-        gdf.loc[gdf['Country Code of Buyer']==country, 'Rating Average'] = rating_avg
+day_fig = figure(
+    title='Hourly Sales',
+    width=1400,
+    height=550,
+    x_axis_label='Day of the Week',
+    y_axis_label='Sales',
+    x_range=days,
+    toolbar_location=None,
+    tools='hover',
+    tooltips='Sales on @days: @{Daily Sales}'
+)
 
-    gdf = gdf.fillna(0)
+day_fig.vbar(
+    source=data,
+    x='days',
+    top='Daily Sales',
+    width=.95,
+    color='#407ee8'
+)
 
-    countries_with_ratings = gdf[gdf['Rating Average'] != 0]
-    countries_with_no_ratings = gdf[gdf['Rating Average'] == 0]
-    print(gdf)
-geographic_ratings(ratingdf, geodf)
+day_fig.xgrid.grid_line_color = None
+day_fig.y_range.start = 0
+
+day_fig.title.text_font = FONT
+day_fig.axis.major_label_text_font = FONT
+day_fig.axis.axis_label_text_font = FONT
+
+show(day_fig)
+
         

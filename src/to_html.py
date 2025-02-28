@@ -10,8 +10,8 @@ import pandas as pd
 import geopandas as gpd
 
 # Bokeh shenanigans (try avoiding show if possible to test things, just use save with test.html)
-from bokeh.plotting import figure, save
-from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter, CustomJS, Select
+from bokeh.plotting import save
+from bokeh.models import DatetimeTickFormatter, CustomJS, Select
 from bokeh.resources import Resources
 
 # HTML manipulation and visuals
@@ -36,7 +36,7 @@ These need to be added to the final html head to get the right font and look, ot
 """
 
 # This function will bring together every other function to render the final html (well as much as we can with bokeh I'd rather just be writing proper html atp)
-def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, ratingdf: pd.DataFrame):
+def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, ratingdf: pd.DataFrame, df_no_geographical: pd.DataFrame):
     # DATA AND PLOTTING
 
     # Get the Sales Volume plots
@@ -49,6 +49,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     monthly_choro_2 = geographical_over_time(monthly_dfs, geodf)
 
     hourly_figure = hourly_sales_fig(df)
+    daily_figure = day_of_week_fig(df_no_geographical)
 
     donut, text = donut_plot(df, monthly_dfs)
 
@@ -62,7 +63,14 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     rating_choro_2.visible = False
     monthly_choro.visible = False
 
-    select = Select(title="Metric to show:", value="Ratings", options=["Ratings", "Revenue", 'Monthly Sales'])
+    select_style = '''
+    .bk-input {
+        background-color: #15191c;
+        color: white;
+    }
+    '''
+
+    select = Select(title="Metric to show:", value="Ratings", options=["Ratings", "Revenue", 'Monthly Sales'], styles={'font-family': 'DM Sans'},stylesheets=[select_style])
     select.js_on_change("value", CustomJS(args=dict(sales_choro=sales_choro, rating_choro=rating_choro, monthly_choro=monthly_choro), code="""
 
     sales_choro.visible = true
@@ -82,7 +90,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         
     """))
 
-    select_2 = Select(title="Metric to show:", value="Monthly Sales", options=["Ratings", "Revenue", 'Monthly Sales'])
+    select_2 = Select(title="Metric to show:", value="Monthly Sales", options=["Ratings", "Revenue", 'Monthly Sales'], styles={'font-family': 'DM Sans'}, stylesheets=[select_style])
     select_2.js_on_change("value", CustomJS(args=dict(sales_choro_2=sales_choro_2, rating_choro_2=rating_choro_2, monthly_choro_2=monthly_choro_2), code="""
 
     sales_choro_2.visible = true
@@ -102,60 +110,29 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         
     """))
 
+    select_time = Select(title="Metric to show:", value="Daily", options=["Daily", "Hourly"], styles={'font-family': 'DM Sans'}, stylesheets=[select_style])
+    select_time.js_on_change("value", CustomJS(args=dict(daily_figure=daily_figure, hourly_figure=hourly_figure), code="""
+
+    daily_figure.visible = true
+    hourly_figure.visible = true
+
+    if (this.value === "Daily") {
+        hourly_figure.visible = false 
+    } else {
+        daily_figure.visible = false
+    }
+        
+    """))
+
     # LAYOUT AND STYLING
     resources =  Resources(
         mode='cdn',
     )
 
+    # Put the styles in their own file so that it doesn't clog up this
+    css = open('style.css').read()
     styles = GlobalInlineStyleSheet(
-        css='''
-        html, body {
-            box-sizing: border-box;
-            padding: 0;
-            background-color: #15191c;
-            color: white;
-            align-items: center;
-        }
-
-        html{
-            display: table;
-            margin: auto;
-        }
-
-        body{
-            display: table-cell;
-            vertical-align: top;
-        }
-
-        .topnav{
-            background-color: #080808;
-            overflow: hidden;
-        }
-
-        .topnav a{
-            float: left;
-            color: white;
-            text-align: center;
-            padding: 14px 16px;
-            text-decoration: none;
-            font-size: 2em;
-            font-family: DM Sans;
-        }
-
-        .topnav img{
-            float: right;
-        }
-
-        .topnav a:hover {
-            background-color: #38761d;
-            color: white:
-        }
-
-        .topnav a.active {
-            background-color: green;
-            color: white;
-        }
-        '''
+        css=css
     )
 
     # Sales Data
@@ -165,8 +142,13 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         align='center'
     )
 
+    funky_select = column(
+        children=[select_time, hourly_figure, daily_figure],
+        align='center'
+    )
+
     bottom_row = row(
-        children=[hourly_figure],
+        children=[funky_select],
         align='center'
     )
 
@@ -201,13 +183,13 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
 
     choro_style = styles.clone()
     choro_ressources = resources.clone()
-    choro_page = column(
+    choro_page = row(
         children=[select_2, monthly_choro_2, rating_choro_2, sales_choro_2],
         stylesheets=[choro_style],
         align='center'
     )
 
-    choro_page_2 = column(
+    choro_page_2 = row(
         children=[select, monthly_choro, rating_choro, sales_choro],
         align='center'
     )

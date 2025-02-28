@@ -22,7 +22,7 @@ def main():
     ratingdf = clean_country_ratings(ratingdf)
     # Visualizing data
     print('Making the html file')
-    final_html(final_df, geodf, crashdf, ratingdf)
+    final_html(final_df, geodf, crashdf, ratingdf, df_no_geographical)
     
 if __name__ == "__main__":
     main()
