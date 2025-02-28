@@ -23,34 +23,27 @@ python main.py
 ```
 
 ## Adding extra final styling
-We could not figure out how to change the styling in the head of the HTML file the following needs to be manually added in place of the generated style tags:
+We could not figure out how to add link tags to the head of the generated HTML file so these need to be manually added above the style tags for the nice font:
 ```
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-    <style>
-      html, body {
-        box-sizing: border-box;
-        padding: 0;
-        background-color: #15191c;
-        color: white;
-        align-items: center;
-      }
-
-      html{
-        display: table;
-        margin: auto;
-      }
-
-      body{
-        display: table-cell;
-        vertical-align: middle;
-      }
-      
-    </style>
+```
+Bokeh also is a bit funky with how it handles divs so the navbar needs to be manually added to the top of the HTML body:
+```
+    <div class="topnav">
+      <a class='active' href="https://liacs.leidenuniv.nl/~s3555380/main.html">Home</a>
+      <a href="https://liacs.leidenuniv.nl/~s3555380/choropleths.html">Geographic Data</a>
+      <a href="https://liacs.leidenuniv.nl/~s3555380/crashes.html">Crashes and Ratings</a>
+      <img src="https://complete-reference.com/img/logo2.png" width=65 height=65>
+    </div>
 ```
 # Credits 
 Geographic shapefile by [Natural Earth](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/)
+# Screenshots of the final Website
+![main](src/img/main.png)
+![geographic](src/img/geo.png)
+![crashes](src/img/crashes.png)
 # To-do's
 ## Written Document
 We just need to write the report now.
