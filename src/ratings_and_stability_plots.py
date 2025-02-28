@@ -51,7 +51,7 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame, monthly
 
     for idx, month in enumerate(monthly_sales_df):
         monthly_sales = len(month)
-        if idx == 0:\
+        if idx == 0:
             cum_sales.append(monthly_sales)
         else:
             accum = cum_sales[idx-1] + monthly_sales
