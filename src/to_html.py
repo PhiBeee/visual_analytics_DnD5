@@ -29,7 +29,7 @@ These need to be added to the final html head to get the right font and look, ot
 # navigation bar to be added to each html file, because bokeh does funky stuff
     <div class="topnav">
       <a class='active' href="https://liacs.leidenuniv.nl/~s3555380/main.html">Home</a>
-      <a href="https://liacs.leidenuniv.nl/~s3555380/choropleth.html">Geographic Data</a>
+      <a href="https://liacs.leidenuniv.nl/~s3555380/choropleths.html">Geographic Data</a>
       <a href="https://liacs.leidenuniv.nl/~s3555380/crashes.html">Crashes and Ratings</a>
       <img src="https://complete-reference.com/img/logo2.png" width=65 height=65>
     </div>
