@@ -92,7 +92,7 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame, monthly
         x_range=months,#other things like tooltip stuff might be nice
         toolbar_location=None,
         tools='hover',
-        tooltips='$name in @months: @$name'
+        tooltips='@months'
     )
     crashes_fig.line(
         x='months',
@@ -126,7 +126,33 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame, monthly
     crashes_fig.axis.major_label_text_font = FONT
     crashes_fig.axis.axis_label_text_font = FONT
 
-    return crashes_fig
+    cumulative_data={
+        'months' : months,
+        'cumulative_sales': cum_sales 
+    }
+    
+    cumulative_fig = figure(
+	    title="Cumulative Sales",
+        width= 650,
+        height=500,
+        x_axis_label='Month of 2021',
+        y_axis_label='All sales of that month and the months before',
+        x_range=months,#other things like tooltip stuff might be nice
+        toolbar_location=None,
+        tools='hover',
+        tooltips='Sales in @months: @cumulative_sales'
+    )
+
+    cumulative_fig.vbar(
+        x="months", 
+        top="cumulative_sales", 
+        bottom=0, 
+        width=0.5, 
+        fill_color='#fe0369',
+        source=cumulative_data
+    )
+    
+    return crashes_fig, cumulative_fig
 
 def crashes_and_ratings_stats(monthly_crash_dfs, monthly_ratings_dfs, crashdf, ratingdf):
     crashes_last_month = monthly_crash_dfs.iloc[-1]
