@@ -15,7 +15,7 @@ def main():
     print('Getting Crash data')
     crashdf = get_data_from_csv_cleaner('stats_crashes')
     
-    print('Getting Ratings data')
+    print('Getting Rating data')
     ratingdf = get_data_from_csv_cleaner('stats_ratings_country')
 
     print('Cleaning country ratings')

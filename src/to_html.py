@@ -57,7 +57,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     rating_choro_2, sales_choro_2 = geographic_ratings(df, ratingdf, geodf)
 
     # Get the new ratings and stability thing, hopefully
-    stability_plot, cumulative_plot = ratings_and_stability(crashdf,ratingdf, monthly_dfs) #nothing returned right now
+    stability_plot, cumulative_plot, stats_fig, over_time_fig = ratings_and_stability(crashdf,ratingdf, monthly_dfs) #nothing returned right now
 
     # Cool select for geograhic data
     rating_choro_2.visible = False
@@ -120,6 +120,20 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         hourly_figure.visible = false 
     } else {
         daily_figure.visible = false
+    }
+        
+    """))
+
+    select_buh = Select(title="Metric to show:", value="Cumulative", options=["Cumulative", "Monthly"], styles={'font-family': 'DM Sans'}, stylesheets=[select_style])
+    select_buh.js_on_change("value", CustomJS(args=dict(cumulative_plot=cumulative_plot, over_time_fig=over_time_fig), code="""
+
+    cumulative_plot.visible = true
+    over_time_fig.visible = true
+
+    if (this.value === "Cumulative") {
+        over_time_fig.visible = false 
+    } else {
+        cumulative_plot.visible = false
     }
         
     """))
@@ -212,13 +226,20 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     crashes_resources = resources.clone()
 
     crashes_page = row(
-        children=[stability_plot, cumulative_plot],
+        children=[stability_plot, select_buh, cumulative_plot, over_time_fig],
         stylesheets=[crashes_style],
         align='center'
     )
 
+    over_time_fig.visible = False
+
+    crashe_main = column(
+        children=[stats_fig, crashes_page],
+        align='center'
+    )
+
     save(
-        obj=crashes_page,
+        obj=crashe_main,
         filename='crashes.html',
         title='DnD5 Data Visualisation',
         resources=crashes_resources
