@@ -57,7 +57,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     rating_choro_2, sales_choro_2 = geographic_ratings(df, ratingdf, geodf)
 
     # Get the new ratings and stability thing, hopefully
-    stability_plot = ratings_and_stability(crashdf,ratingdf, monthly_dfs) #nothing returned right now
+    stability_plot, cumulative_plot = ratings_and_stability(crashdf,ratingdf, monthly_dfs) #nothing returned right now
 
     # Cool select for geograhic data
     rating_choro_2.visible = False
@@ -211,8 +211,8 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
     crashes_style = styles.clone()
     crashes_resources = resources.clone()
 
-    crashes_page = column(
-        children=[stability_plot],
+    crashes_page = row(
+        children=[stability_plot, cumulative_plot],
         stylesheets=[crashes_style],
         align='center'
     )
