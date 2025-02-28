@@ -90,3 +90,47 @@ def hourly_sales_fig(df: pd.DataFrame):
     hourly_fig.axis.axis_label_text_font = FONT
 
     return hourly_fig
+
+def day_of_week_fig(df: pd.DataFrame):
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+    daily_sales = []
+    for day in set(df['Day of Week']):
+        daydf = df[df['Day of Week'] == day]
+        daily_sale = len(daydf)
+        
+        daily_sales.append(daily_sale)
+    
+    data = {
+        'days': days,
+        'Daily Sales': daily_sales
+    }
+
+    day_fig = figure(
+        title='Daily Sales',
+        width=1400,
+        height=550,
+        x_axis_label='Day of the Week',
+        y_axis_label='Sales',
+        x_range=days,
+        toolbar_location=None,
+        tools='hover',
+        tooltips='Sales on @days: @{Daily Sales}',
+    )
+
+    day_fig.vbar(
+        source=data,
+        x='days',
+        top='Daily Sales',
+        width=.95,
+        color='#407ee8'
+    )
+
+    day_fig.xgrid.grid_line_color = None
+    day_fig.y_range.start = 0
+
+    day_fig.title.text_font = FONT
+    day_fig.axis.major_label_text_font = FONT
+    day_fig.axis.axis_label_text_font = FONT
+
+    return day_fig

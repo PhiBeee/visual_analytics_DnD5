@@ -139,6 +139,9 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
     # Fills the column of charged amount in Euro, recalculated entries but they're the same value, but more precise
     df['Amount (Merchant Currency)'] = df['Currency Conversion Rate'] * df['Charged Amount']
 
+    # Add a column with the day of the week
+    df['Day of Week'] = df['Transaction Date'].dt.day_of_week
+    
     # Convenience rename to be clearer
     df = df.rename(
         columns={

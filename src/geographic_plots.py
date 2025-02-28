@@ -11,8 +11,7 @@ from bokeh.models import GeoJSONDataSource, Tabs, TabPanel, Tooltip
 
 # HTML manipulation and visuals
 from bokeh.io import curdoc
-from bokeh.models import ColorBar, LinearColorMapper, Legend, Select, Select, CustomJS
-from bokeh.layouts import column
+from bokeh.models import ColorBar, LinearColorMapper, Legend
 from bokeh.palettes import RdPu9, Turbo256
 
 FONT = 'DM Sans'
@@ -113,7 +112,7 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
         label_standoff=9,
         width=500,
         height=20,
-        location=(625,0),
+        location=(200,0),
         orientation='horizontal',
         major_label_text_font='DM Sans'
     )
@@ -152,8 +151,9 @@ def geographical_over_time(monthly_dfs, gdf: gpd.GeoDataFrame):
             tooltips=f'@{tooltip_1}: @{tooltip_2}',
             x_axis_location=None,
             y_axis_location=None,
-            width=1750,
-            height=900
+            width=900,
+            height=475,
+            align='center'
         )
 
         choropleth.grid.grid_line_color = None
@@ -305,7 +305,7 @@ def geographic_ratings(salesdf: pd.DataFrame ,ratings_df: pd.DataFrame, gdf: gpd
         label_standoff=9,
         width=500,
         height=20,
-        location=(625,0),
+        location=(200,0),
         orientation='horizontal',
         major_label_text_font='DM Sans'
     )
@@ -314,11 +314,11 @@ def geographic_ratings(salesdf: pd.DataFrame ,ratings_df: pd.DataFrame, gdf: gpd
         title='Total average rating per country',
         toolbar_location='right',
         tools='hover,box_zoom,reset',
-        tooltips='@{Country of Buyer}: @{Rating Average}{0.00} ',
+        tooltips='@{Country of Buyer}: @{Rating Average}{0.00} ⭐',
         x_axis_location=None,
         y_axis_location=None,
-        width=1750,
-        height=900
+        width=900,
+        height=475
     )
 
     rating_choro.grid.grid_line_color = None
@@ -364,20 +364,20 @@ def geographic_ratings(salesdf: pd.DataFrame ,ratings_df: pd.DataFrame, gdf: gpd
         label_standoff=9,
         width=500,
         height=20,
-        location=(625,0),
+        location=(200,0),
         orientation='horizontal',
         major_label_text_font='DM Sans'
     )
 
     sales_choro = figure(
-        title='Total average rating per country',
+        title='Total revenue per country',
         toolbar_location='right',
         tools='hover,box_zoom,reset',
         tooltips='@{Country of Buyer}: @{Total Revenue}{0.00} €',
         x_axis_location=None,
         y_axis_location=None,
-        width=1750,
-        height=900,
+        width=900,
+        height=475,
         visible=False,
     )
 

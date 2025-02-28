@@ -12,6 +12,7 @@ from bokeh.transform import cumsum
 from bokeh.io import curdoc
 from bokeh.palettes import Spectral8
 from bokeh.models import LabelSet, ColumnDataSource
+from bokeh.core.properties import value
 
 FONT = 'DM Sans'
 
@@ -106,10 +107,10 @@ def sales_volume(df: pd.DataFrame):
         y='Total Revenue',
         text='Total Revenue',
         level='glyph',
-        text_font='DM Sans',
+        text_font=value('DM Sans'),
         text_color='white',
         y_offset=5,
-        x_offset=-25
+        x_offset=-25,
     )
 
     euro_fig.add_layout(euro_labelset)
@@ -166,10 +167,10 @@ def sales_volume(df: pd.DataFrame):
         y='Total Sales',
         text='Total Sales',
         level='glyph',
-        text_font='DM Sans',
+        text_font=value('DM Sans'),
         text_color='white',
         y_offset=5,
-        x_offset=-15
+        x_offset=-15,
     )
 
     sales_fig.add_layout(sales_labelset)
