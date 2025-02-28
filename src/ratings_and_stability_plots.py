@@ -7,7 +7,7 @@ from bokeh.plotting import figure
 from bokeh.models import DatetimeTickFormatter, ColumnDataSource, CDSView, GroupFilter
 
 # HTML manipulation and visuals
-from bokeh.models import TabPanel, Tabs, Tooltip, Div
+from bokeh.models import TabPanel, Tabs, Tooltip, Div, Label, Range1d
 from bokeh.palettes import Bokeh8
 
 FONT = 'DM Sans'
@@ -44,6 +44,7 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame, monthly
     monthly_dfs = [df_june, df_july, df_august, df_september, df_october, df_november, df_december]
     monthly_dfs_ratings = [df_june_rating, df_july_rating, df_august_rating, df_september_rating, df_october_rating, df_november_rating, df_december_rating]
     monthly_crashes = []
+    monthly_crashes_not_divided = []
     monthly_ARNs = []
     monthly_average_ratings = []
 
@@ -62,6 +63,7 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame, monthly
         crashes = month['Daily Crashes'] 
         ANR = month['Daily ANRs']
         # Add the monthly sums to a list
+        monthly_crashes_not_divided.append(sum(crashes))
         monthly_crashes.append(crashes.sum()/200)#do note the division, as it does 'change' the data
         monthly_ARNs.append(ANR.sum()/5)#do note the division, as it does 'change' the data
     for month in monthly_dfs_ratings:
@@ -126,14 +128,58 @@ def ratings_and_stability(crashdf: pd.DataFrame, ratingdf: pd.DataFrame, monthly
     crashes_fig.axis.major_label_text_font = FONT
     crashes_fig.axis.axis_label_text_font = FONT
 
+    crashes_and_ratings_stats(monthly_crashes_not_divided, monthly_average_ratings, crashdf, ratingdf)
+
     return crashes_fig
 
-def crashes_and_ratings_stats(monthly_crash_dfs, monthly_ratings_dfs, crashdf, ratingdf):
-    crashes_last_month = monthly_crash_dfs.iloc[-1]
-    crashes_penultimate_month = monthly_crash_dfs.iloc[-2]
+def crashes_and_ratings_stats(monthly_crashes, monthly_average_ratings, crashdf, ratingdf):
+    # Crashes
+    crashes_last_month = monthly_crashes[-1]
+    crashes_penultimate_month = monthly_crashes[-2]
 
-    crashes_last_month = sum(crashes_last_month['Daily Crashes'])
-    crashes_penultimate_month = sum(crashes_penultimate_month['Daily Crashes'])
-
-    crashes_diff = crashes_penultimate_month - crashes_last_month
+    crashes_diff = crashes_last_month - crashes_penultimate_month
     crashes_diff_percentage = crashes_diff/crashes_penultimate_month*100
+    crashes_diff_percentage = round(crashes_diff_percentage, 2)
+
+    # Ratings 
+    ratings_last_month = monthly_average_ratings[-1]
+    ratings_penultimate_month = monthly_average_ratings[-2]
+
+    ratings_diff = ratings_last_month - ratings_penultimate_month
+    ratings_diff_percentage = ratings_diff/ratings_penultimate_month*100
+    ratings_diff_percentage = round(ratings_diff_percentage, 2)
+
+    # Text figure with metrics compared to previous month
+
+    text_fig = figure(
+        height=350,
+        width=1300,
+        toolbar_location=None,
+        tools='',
+        x_range=Range1d(start=-10, end=10),
+        y_range=Range1d(start=-10, end=10),
+    )
+
+    title_label = Label(
+        x=0,
+        y=-9,
+        text='Performance relative to last month:',
+        text_color='white',
+        text_font='DM Sans',
+        text_font_style='bold',
+        text_align='center',
+        text_font_size='1.5em'
+    )
+
+    crashes_string = f'▲ {crashes_diff_percentage} %   ▲ {crashes_diff}'
+
+    crashes_label = Label(
+        x=-8,
+        y=0,
+        text=crashes_string,
+        text_color='red',
+        text_font='DM Sans',
+        text_font_style='bold',
+        text_align='center',
+        text_font_size='1em'
+    )
