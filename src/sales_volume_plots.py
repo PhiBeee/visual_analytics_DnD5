@@ -251,7 +251,7 @@ def sales_volume(df: pd.DataFrame):
     pie_fig.outline_line_color = '#15191c'
 
     pie_fig.legend.label_text_font = FONT
-    pie_fig.title.text_font= FONT
+    pie_fig.title.text_font = FONT
     pie_fig.title.align = 'center'
 
     

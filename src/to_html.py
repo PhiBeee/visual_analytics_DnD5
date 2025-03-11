@@ -1,9 +1,10 @@
-# Splitting up the code because the fie was getting long
+# Splitting up the code because the fie was getting long (I am losing it)
 from geographic_plots import *
 from sales_volume_plots import *
 from ratings_and_stability_plots import *
 from time_plots import *
 from donut_plot import *
+from queries import *
 
 # Filtering operations on our dataframes
 import pandas as pd
@@ -53,6 +54,7 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
 
     donut, text = donut_plot(df, monthly_dfs)
 
+    amount_of_ratings_per_month, average_rating_bar, rating_pie_fig = rating_plots(ratingdf)
     rating_choro, sales_choro = geographic_ratings(df, ratingdf, geodf)
     rating_choro_2, sales_choro_2 = geographic_ratings(df, ratingdf, geodf)
 
@@ -231,10 +233,20 @@ def final_html(df:pd.DataFrame, geodf: gpd.GeoDataFrame, crashdf: pd.DataFrame, 
         align='center'
     )
 
+    stupid_dumb_extra_plots = column(
+        children=[amount_of_ratings_per_month, average_rating_bar],
+        align='center',
+    )
+
+    stupid_dumb_extra_plots = row(
+        children=[stupid_dumb_extra_plots, rating_pie_fig],
+        align='center'
+    )
+
     over_time_fig.visible = False
 
     crashe_main = column(
-        children=[stats_fig, crashes_page],
+        children=[stats_fig, crashes_page, stupid_dumb_extra_plots],
         align='center'
     )
 
